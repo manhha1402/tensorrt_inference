@@ -1,32 +1,58 @@
-# Prerequisites
-*.d
+venv/
+build*/
+bin/
+lib/
+3rdparty_downloads/
+*.vscode/
+# .egg-info folder
+*.egg-info/
+__pycache__/
+# generated docs
+*.dox
+*.wikidoc
+*.tar
+# eclipse
+.project
+.cproject
+# qcreator
+qtcreator-*
+*.user
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
+# Emacs
+.#*
+
+# VI/VIM
+*.swp
+
+
+# python files
+*.pyc
+*.pco
+
+# temporary files
+*~
+
+# merge conflict files
+*.orig
+*BACKUP*
+*BASE*
+*LOCAL*
+*REMOTE*
+
+# Catkin custom files
+CATKIN_IGNORE
+*.autosave
+.idea
+# bag and tar files
+*.bag
+*.tar
+# 3D files
+*.ply
 *.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
+# kate files
+.kate-swp
+compile_commands.json
+./.git/objects/pack/pack-f51485d7972ac906f190279c31eb46c04f3f0bab.pack
+./.git/objects/pack/pack-1ba22bbc6522b9ae0abf27924fa272d506f55144.pack
+./.git/objects/pack/pack-ba263e2008738b9701188fca489c64e2ee8c1ba9.pack
+./.git/objects/pack/pack-ba263e2008738b9701188fca489c64e2ee8c1ba9.pack
