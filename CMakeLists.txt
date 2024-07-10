@@ -40,6 +40,7 @@ include_directories(include)
 # Build the YoloV9 library
 add_library(${PROJECT_NAME}_lib SHARED 
                 src/tensorrt_api/engine.cpp
+                src/yolov8.cpp
                 src/yolov9.cpp
 )
 
