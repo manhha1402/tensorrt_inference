@@ -31,6 +31,9 @@ qtcreator-*
 
 # temporary files
 *~
+# DL models
+*.pt
+*.onnx
 
 # merge conflict files
 *.orig
