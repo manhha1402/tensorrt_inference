@@ -1,25 +1,8 @@
 #pragma once
 #include "tensorrt_inference/tensorrt_api/engine.h"
-#include <fstream>
+#include "tensorrt_inference/utils.h"
 
-// Utility method for checking if a file exists on disk
-inline bool doesFileExist(const std::string &name) {
-    std::ifstream f(name.c_str());
-    return f.good();
-}
 
-struct Object {
-    // The object class.
-    int label{};
-    // The detection's confidence probability.
-    float probability{};
-    // The object bounding box rectangle.
-    cv::Rect_<float> rect;
-    // Semantic segmentation mask
-    cv::Mat boxMask;
-    // Pose estimation key points
-    std::vector<float> kps{};
-};
 
 // Config the behavior of the YoloV9 detector.
 // Can pass these arguments as command line parameters.
