@@ -21,4 +21,6 @@ struct Object {
     // Pose estimation key points
     std::vector<float> kps{};
 };
+
+
 }
