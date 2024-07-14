@@ -1,7 +1,8 @@
 #pragma once 
 #include <fstream>
 #include <opencv2/opencv.hpp>
-
+namespace tensorrt_inference
+{
 // Utility method for checking if a file exists on disk
 inline bool doesFileExist(const std::string &name) {
     std::ifstream f(name.c_str());
@@ -20,3 +21,4 @@ struct Object {
     // Pose estimation key points
     std::vector<float> kps{};
 };
+}

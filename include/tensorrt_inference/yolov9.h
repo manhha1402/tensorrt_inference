@@ -1,17 +1,10 @@
 #pragma once
 #include "tensorrt_inference/tensorrt_api/engine.h"
+#include "tensorrt_inference/utils.h"
+
 #include <fstream>
 namespace tensorrt_inference
 {
-// Utility method for checking if a file exists on disk
-inline bool doesFileExist(const std::string &name) {
-    std::ifstream f(name.c_str());
-    return f.good();
-}
-#include "tensorrt_inference/utils.h"
-
-
-
 // Config the behavior of the YoloV9 detector.
 // Can pass these arguments as command line parameters.
 struct YoloV9Config {

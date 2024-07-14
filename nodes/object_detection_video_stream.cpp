@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Create the YoloV9 engine
-    YoloV9 yoloV9(onnxModelPath, config);
+    tensorrt_inference::YoloV9 yoloV9(onnxModelPath, config);
 
     // Initialize the video stream
     cv::VideoCapture cap;

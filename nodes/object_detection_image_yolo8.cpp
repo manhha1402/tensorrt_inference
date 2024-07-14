@@ -4,7 +4,7 @@
 
 // Runs object detection on an input image then saves the annotated image to disk.
 int main(int argc, char *argv[]) {
-    YoloV8Config config;
+    tensorrt_inference::YoloV8Config config;
     std::string onnxModelPath;
     std::string inputImage;
 
@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Create the YoloV8 engine
-    YoloV8 yoloV8(onnxModelPath, config);
+    tensorrt_inference::YoloV8 yoloV8(onnxModelPath, config);
 
     // Read the input image
     auto img = cv::imread(inputImage);

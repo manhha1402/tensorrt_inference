@@ -8,7 +8,7 @@ int main(int argc, char *argv[]) {
     std::string inputImage;
 
     // Parse the command line arguments
-    if (!tensorrt_inference::parseArguments(argc, argv, config, onnxModelPath, inputImage)) {
+    if (!parseArguments(argc, argv, config, onnxModelPath, inputImage)) {
         return -1;
     }
 

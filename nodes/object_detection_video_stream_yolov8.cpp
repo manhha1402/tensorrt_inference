@@ -5,7 +5,7 @@
 
 // Runs object detection on video stream then displays annotated results.
 int main(int argc, char* argv[]) {
-    YoloV8Config config;
+    tensorrt_inference::YoloV8Config config;
     std::string onnxModelPath;
     std::string inputVideo;
 
@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
     }
 
 	// Create the YoloV8 engine
-	YoloV8 yoloV8(onnxModelPath, config);
+	tensorrt_inference::YoloV8 yoloV8(onnxModelPath, config);
 
 	// Initialize the video stream
 	cv::VideoCapture cap;
