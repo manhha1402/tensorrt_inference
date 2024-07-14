@@ -66,6 +66,13 @@ target_include_directories(
 add_executable(detect_object_image nodes/object_detection_image.cpp)
 target_link_libraries(detect_object_image ${PROJECT_NAME}_lib)
 
+# Build and link the executables
+add_executable(object_detection_image_yolo8 nodes/object_detection_image_yolo8.cpp)
+target_link_libraries(object_detection_image_yolo8 ${PROJECT_NAME}_lib)
+
 
 add_executable(detect_object_video nodes/object_detection_video_stream.cpp)
 target_link_libraries(detect_object_video ${PROJECT_NAME}_lib)
+
+add_executable(object_detection_video_stream_yolov8 nodes/object_detection_video_stream_yolov8.cpp)
+target_link_libraries(object_detection_video_stream_yolov8 ${PROJECT_NAME}_lib)

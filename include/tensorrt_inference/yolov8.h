@@ -1,4 +1,5 @@
 #pragma once
+#include "tensorrt_inference/utils.h"
 #include "tensorrt_inference/tensorrt_api/engine.h"
 #include <fstream>
 namespace tensorrt_inference
@@ -22,6 +23,8 @@ struct Object {
     std::vector<float> kps{};
 };
 
+
+
 // Config the behavior of the YoloV8 detector.
 // Can pass these arguments as command line parameters.
 struct YoloV8Config {
@@ -44,19 +47,20 @@ struct YoloV8Config {
     int numKPS = 17;
     float kpsThreshold = 0.5f;
     // Class thresholds (default are COCO classes)
-    std::vector<std::string> classNames = {
-        "person",         "bicycle",    "car",           "motorcycle",    "airplane",     "bus",           "train",
-        "truck",          "boat",       "traffic light", "fire hydrant",  "stop sign",    "parking meter", "bench",
-        "bird",           "cat",        "dog",           "horse",         "sheep",        "cow",           "elephant",
-        "bear",           "zebra",      "giraffe",       "backpack",      "umbrella",     "handbag",       "tie",
-        "suitcase",       "frisbee",    "skis",          "snowboard",     "sports ball",  "kite",          "baseball bat",
-        "baseball glove", "skateboard", "surfboard",     "tennis racket", "bottle",       "wine glass",    "cup",
-        "fork",           "knife",      "spoon",         "bowl",          "banana",       "apple",         "sandwich",
-        "orange",         "broccoli",   "carrot",        "hot dog",       "pizza",        "donut",         "cake",
-        "chair",          "couch",      "potted plant",  "bed",           "dining table", "toilet",        "tv",
-        "laptop",         "mouse",      "remote",        "keyboard",      "cell phone",   "microwave",     "oven",
-        "toaster",        "sink",       "refrigerator",  "book",          "clock",        "vase",          "scissors",
-        "teddy bear",     "hair drier", "toothbrush"};
+    // std::vector<std::string> classNames = {
+    //     "person",         "bicycle",    "car",           "motorcycle",    "airplane",     "bus",           "train",
+    //     "truck",          "boat",       "traffic light", "fire hydrant",  "stop sign",    "parking meter", "bench",
+    //     "bird",           "cat",        "dog",           "horse",         "sheep",        "cow",           "elephant",
+    //     "bear",           "zebra",      "giraffe",       "backpack",      "umbrella",     "handbag",       "tie",
+    //     "suitcase",       "frisbee",    "skis",          "snowboard",     "sports ball",  "kite",          "baseball bat",
+    //     "baseball glove", "skateboard", "surfboard",     "tennis racket", "bottle",       "wine glass",    "cup",
+    //     "fork",           "knife",      "spoon",         "bowl",          "banana",       "apple",         "sandwich",
+    //     "orange",         "broccoli",   "carrot",        "hot dog",       "pizza",        "donut",         "cake",
+    //     "chair",          "couch",      "potted plant",  "bed",           "dining table", "toilet",        "tv",
+    //     "laptop",         "mouse",      "remote",        "keyboard",      "cell phone",   "microwave",     "oven",
+    //     "toaster",        "sink",       "refrigerator",  "book",          "clock",        "vase",          "scissors",
+    //     "teddy bear",     "hair drier", "toothbrush"};
+      std::vector<std::string> classNames = {"defect"};
 };
 
 class YoloV8 {
