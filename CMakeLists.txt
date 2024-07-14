@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.22)
-project(tensorrt_inference)
-
+message(STATUS "Configuring with CMake ${CMAKE_VERSION}")
+project(tensorrt_inference VERSION 0.0.1
+               DESCRIPTION "NEURA Surface Matching"
+               LANGUAGES CXX CUDA)
 # Use ccache to speed up rebuilds
 include(cmake/ccache.cmake)
 
@@ -76,3 +78,57 @@ target_link_libraries(detect_object_video ${PROJECT_NAME}_lib)
 
 add_executable(object_detection_video_stream_yolov8 nodes/object_detection_video_stream_yolov8.cpp)
 target_link_libraries(object_detection_video_stream_yolov8 ${PROJECT_NAME}_lib)
+
+
+##########
+# EXPORT #
+##########
+include(GNUInstallDirs)
+install(
+    TARGETS ${PROJECT_NAME}_lib       
+    EXPORT tensorrt_inferenceTargets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/${PROJECT_NAME}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
+    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
+)
+
+install(
+  TARGETS detect_object_image object_detection_image_yolo8 detect_object_video object_detection_video_stream_yolov8
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
+)
+
+install(
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+include(CMakePackageConfigHelpers)
+# generate the config file that is includes the exports
+configure_package_config_file(cmake/Config.cmake.in
+    "${CMAKE_CURRENT_BINARY_DIR}/tensorrt_inferenceConfig.cmake"
+    INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake"
+    NO_SET_AND_CHECK_MACRO
+    NO_CHECK_REQUIRED_COMPONENTS_MACRO
+)
+
+# generate the version file for the config file
+write_basic_package_version_file(
+    "tensorrt_inferenceConfigVersion.cmake"
+    VERSION "${tensorrt_inference_VERSION_MAJOR}.${tensorrt_inference_VERSION_MINOR}.${tensorrt_inference_VERSION_PATCH}"
+    COMPATIBILITY AnyNewerVersion
+)
+
+# install the configuration file
+install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/tensorrt_inferenceConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/tensorrt_inferenceConfigVersion.cmake
+    DESTINATION share/tensorrt_inference/cmake)
+
+install(
+    EXPORT tensorrt_inferenceTargets
+    NAMESPACE tensorrt_inference::
+    DESTINATION share/tensorrt_inference/cmake
+)
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/add_uninstall_target.cmake")
+include(cmake/package_debian.cmake)
