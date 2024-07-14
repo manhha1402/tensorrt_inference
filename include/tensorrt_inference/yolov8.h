@@ -1,7 +1,8 @@
 #pragma once
 #include "tensorrt_inference/tensorrt_api/engine.h"
 #include <fstream>
-
+namespace tensorrt_inference
+{
 // Utility method for checking if a file exists on disk
 inline bool doesFileExist(const std::string &name) {
     std::ifstream f(name.c_str());
@@ -209,3 +210,4 @@ private:
         {255, 128, 0},  {255, 128, 0},  {255, 128, 0},  {255, 128, 0},  {255, 128, 0},  {0, 255, 0},    {0, 255, 0},
         {0, 255, 0},    {0, 255, 0},    {0, 255, 0},    {0, 255, 0},    {0, 255, 0}};
 };
+}

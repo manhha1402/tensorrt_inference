@@ -1,7 +1,8 @@
 #pragma once
 #include "tensorrt_inference/yolov9.h"
 #include <iostream>
-
+namespace tensorrt_inference
+{
 inline void showHelp(char *argv[]) {
     std::cout << "Usage: " << argv[0] << " [OPTIONS]" << std::endl << std::endl;
 
@@ -340,4 +341,5 @@ inline bool parseArgumentsVideo(int argc, char *argv[], YoloV9Config &config, st
     }
 
     return true;
+}
 }

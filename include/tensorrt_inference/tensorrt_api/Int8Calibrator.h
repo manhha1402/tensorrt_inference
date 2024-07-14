@@ -1,6 +1,7 @@
 #pragma once
 #include "NvInfer.h"
-
+namespace tensorrt_inference
+{
 // Class used for int8 calibration
 class Int8EntropyCalibrator2 : public nvinfer1::IInt8EntropyCalibrator2 {
 public:
@@ -31,3 +32,4 @@ private:
     void *m_deviceInput;
     std::vector<char> m_calibCache;
 };
+}

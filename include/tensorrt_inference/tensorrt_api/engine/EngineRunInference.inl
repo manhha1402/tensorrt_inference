@@ -2,7 +2,8 @@
 #include <filesystem>
 #include <spdlog/spdlog.h>
 #include "tensorrt_inference/tensorrt_api/util/Util.h"
-
+namespace tensorrt_inference
+{
 template <typename T>
 bool Engine<T>::runInference(const std::vector<std::vector<cv::cuda::GpuMat>> &inputs,
                              std::vector<std::vector<std::vector<T>>> &featureVectors) {
@@ -129,4 +130,5 @@ bool Engine<T>::runInference(const std::vector<std::vector<cv::cuda::GpuMat>> &i
     Util::checkCudaErrorCode(cudaStreamSynchronize(inferenceCudaStream));
     Util::checkCudaErrorCode(cudaStreamDestroy(inferenceCudaStream));
     return true;
+}
 }

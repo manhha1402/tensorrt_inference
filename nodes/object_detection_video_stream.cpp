@@ -4,7 +4,7 @@
 
 // Runs object detection on video stream then displays annotated results.
 int main(int argc, char *argv[]) {
-    YoloV9Config config;
+    tensorrt_inference::YoloV9Config config;
     std::string onnxModelPath;
     std::string inputVideo;
 

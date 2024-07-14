@@ -17,7 +17,8 @@
 #include "tensorrt_inference/tensorrt_api/util/Util.h"
 #include "tensorrt_inference/tensorrt_api/util/Stopwatch.h"
 #include "macros.h"
-
+namespace tensorrt_inference
+{
 // Precision used for GPU inference
 enum class Precision {
     // Full precision floating point value
@@ -153,6 +154,7 @@ template <typename T> Engine<T>::Engine(const Options &options) : m_options(opti
 
 template <typename T> Engine<T>::~Engine() { clearGpuBuffers(); }
 
+}
 // Include inline implementations
 #include "engine/EngineRunInference.inl"
 #include "engine/EngineUtilities.inl"

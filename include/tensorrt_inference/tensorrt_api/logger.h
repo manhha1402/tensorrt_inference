@@ -3,7 +3,8 @@
 #include <iostream>
 #include <string>
 #include <spdlog/spdlog.h>
-
+namespace tensorrt_inference
+{
 enum class LogLevel {
     Trace,
     Debug,
@@ -72,4 +73,5 @@ inline spdlog::level::level_enum toSpdlogLevel(const std::string& logLevelStr) {
             spdlog::warn("Unknown log level. Using default log level (info).");
             return spdlog::level::info;
     }
+}
 }

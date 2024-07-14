@@ -1,7 +1,8 @@
 #pragma once
 #include <filesystem>
 #include <spdlog/spdlog.h>
-
+namespace tensorrt_inference
+{
 template <typename T>
 void Engine<T>::transformOutput(std::vector<std::vector<std::vector<T>>> &input, std::vector<std::vector<T>> &output) {
     if (input.size() != 1) {
@@ -137,4 +138,5 @@ template <typename T> void Engine<T>::clearGpuBuffers() {
         }
         m_buffers.clear();
     }
+}
 }

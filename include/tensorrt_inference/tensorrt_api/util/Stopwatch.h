@@ -1,6 +1,7 @@
 #pragma once
 #include <chrono>
-
+namespace tensorrt_inference
+{
 // Utility Timer
 template <typename Clock = std::chrono::high_resolution_clock> class Stopwatch {
     typename Clock::time_point start_point;
@@ -18,3 +19,4 @@ public:
 };
 
 using preciseStopwatch = Stopwatch<>;
+}

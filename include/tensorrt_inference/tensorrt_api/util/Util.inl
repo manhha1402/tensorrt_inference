@@ -1,7 +1,8 @@
 #pragma once
 
 #include <filesystem>
-
+namespace tensorrt_inference
+{
 namespace Util {
 
 inline bool doesFileExist(const std::string &filepath) {
@@ -27,4 +28,5 @@ inline std::vector<std::string> getFilesInDirectory(const std::string &dirPath) 
         }
         return fileNames;
     }
+}
 }

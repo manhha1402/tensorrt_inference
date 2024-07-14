@@ -1,6 +1,7 @@
 #include "tensorrt_inference/yolov9.h"
 #include <opencv2/cudaimgproc.hpp>
-
+namespace tensorrt_inference
+{
 YoloV9::YoloV9(const std::string &onnxModelPath, const YoloV9Config &config)
     : PROBABILITY_THRESHOLD(config.probabilityThreshold), NMS_THRESHOLD(config.nmsThreshold), TOP_K(config.topK),
       CLASS_NAMES(config.classNames) {
@@ -226,4 +227,5 @@ void YoloV9::drawObjectLabels(cv::Mat &image, const std::vector<Object> &objects
 
         cv::putText(image, text, cv::Point(x, y + labelSize.height), cv::FONT_HERSHEY_SIMPLEX, 0.35 * scale, txtColor, scale);
     }
+}
 }

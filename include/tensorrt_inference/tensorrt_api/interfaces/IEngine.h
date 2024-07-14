@@ -4,7 +4,8 @@
 #include <array>
 #include <opencv2/core/cuda.hpp>
 #include "NvInfer.h" // Include for nvinfer1::Dims and nvinfer1::Dims3
-
+namespace tensorrt_inference
+{
 template <typename T>
 class IEngine {
 public:
@@ -18,3 +19,4 @@ public:
     virtual const std::vector<nvinfer1::Dims3> &getInputDims() const = 0;
     virtual const std::vector<nvinfer1::Dims> &getOutputDims() const = 0;
 };
+}

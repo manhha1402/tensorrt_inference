@@ -5,7 +5,8 @@
 #include <iostream>
 #include <iterator>
 #include <random>
-
+namespace tensorrt_inference
+{
 using namespace nvinfer1;
 using namespace Util;
 
@@ -134,3 +135,4 @@ void Int8EntropyCalibrator2::writeCalibrationCache(const void *ptr, std::size_t 
 }
 
 Int8EntropyCalibrator2::~Int8EntropyCalibrator2() { checkCudaErrorCode(cudaFree(m_deviceInput)); };
+}

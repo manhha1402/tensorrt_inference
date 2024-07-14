@@ -1,6 +1,7 @@
 #include "tensorrt_inference/yolov8.h"
 #include <opencv2/cudaimgproc.hpp>
-
+namespace tensorrt_inference
+{
 YoloV8::YoloV8(const std::string &onnxModelPath, const YoloV8Config &config)
     : PROBABILITY_THRESHOLD(config.probabilityThreshold), NMS_THRESHOLD(config.nmsThreshold), TOP_K(config.topK),
       SEG_CHANNELS(config.segChannels), SEG_H(config.segH), SEG_W(config.segW), SEGMENTATION_THRESHOLD(config.segmentationThreshold),
@@ -478,4 +479,5 @@ void YoloV8::drawObjectLabels(cv::Mat &image, const std::vector<Object> &objects
             }
         }
     }
+}
 }

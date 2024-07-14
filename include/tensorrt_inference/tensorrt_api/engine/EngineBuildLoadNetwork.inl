@@ -2,7 +2,8 @@
 #include <filesystem>
 #include <spdlog/spdlog.h>
 #include "tensorrt_inference/tensorrt_api/util/Util.h"
-
+namespace tensorrt_inference
+{
 template <typename T>
 bool Engine<T>::buildLoadNetwork(std::string onnxModelPath, const std::array<float, 3> &subVals, const std::array<float, 3> &divVals,
                                  bool normalize) {
@@ -366,4 +367,5 @@ bool Engine<T>::build(std::string onnxModelPath, const std::array<float, 3> &sub
 
     Util::checkCudaErrorCode(cudaStreamDestroy(profileStream));
     return true;
+}
 }

@@ -1,7 +1,8 @@
 #pragma once
 
 #include <spdlog/spdlog.h>
-
+namespace tensorrt_inference
+{
 #define CHECK(condition)                                                                                                                   \
     do {                                                                                                                                   \
         if (!(condition)) {                                                                                                                \
@@ -9,3 +10,4 @@
             abort();                                                                                                                       \
         }                                                                                                                                  \
     } while (false);
+}
