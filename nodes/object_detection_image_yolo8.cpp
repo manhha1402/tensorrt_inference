@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
 
     // Create the YoloV8 engine
     tensorrt_inference::YoloV8 yoloV8(onnxModelPath, config);
-
+    std::string class_name  =  "person";
     // Read the input image
     auto img = cv::imread(inputImage);
     if (img.empty()) {
@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
     const auto objects = yoloV8.detectObjects(img);
 
     // Draw the bounding boxes on the image
-    yoloV8.drawObjectLabels(img, objects);
+    yoloV8.drawObjectLabels(img, objects,{class_name});
 
     std::cout << "Detected " << objects.size() << " objects" << std::endl;
 

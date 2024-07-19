@@ -53,8 +53,9 @@ public:
     std::vector<Object> detectObjects(const cv::cuda::GpuMat &inputImageBGR);
 
     // Draw the object bounding boxes and labels on the image
-    void drawObjectLabels(cv::Mat &image, const std::vector<Object> &objects, unsigned int scale = 2);
-
+    void drawObjectLabels(cv::Mat &image, const std::vector<Object> &objects,const std::vector<std::string>& detected_class = {}, unsigned int scale = 2);
+    void drawBBoxLabel(cv::Mat &image, const Object &object, unsigned int scale = 2);
+    void drawSegmentation(cv::Mat &image, const Object &object);
 private:
     // Preprocess the input
     std::vector<std::vector<cv::cuda::GpuMat>> preprocess(const cv::cuda::GpuMat &gpuImg);
