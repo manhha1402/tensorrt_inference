@@ -19,8 +19,8 @@ struct YoloV8Config {
     int topK = 100;
     // Segmentation config options
     int segChannels = 32;
-    int segH = 160;
-    int segW = 160;
+    int segH = 160;//160 yolo8-seg 256 fastsam
+    int segW = 160; //160 yolo8-seg 256 fastsam
     float segmentationThreshold = 0.5f;
     // Pose estimation options
     int numKPS = 17;
@@ -39,10 +39,12 @@ struct YoloV8Config {
         "laptop",         "mouse",      "remote",        "keyboard",      "cell phone",   "microwave",     "oven",
         "toaster",        "sink",       "refrigerator",  "book",          "clock",        "vase",          "scissors",
         "teddy bear",     "hair drier", "toothbrush"};
+    //std::vector<std::string> classNames = {"defects"};
 };
 
 class YoloV8 {
 public:
+
     // Builds the onnx model into a TensorRT engine, and loads the engine into memory
     YoloV8(const std::string &onnxModelPath, const YoloV8Config &config);
 

@@ -49,7 +49,8 @@ struct Options {
     // GPU device index
     int deviceIndex = 0;
     // Directory where the engine file should be saved
-    std::string engineFileDir = ".";
+    const std::string home_dir_path =  std::getenv("HOME");
+    std::string engineFileDir = home_dir_path + "/data/weights/";
 };
 
 // Class to extend TensorRT logger

@@ -116,6 +116,7 @@ std::vector<Object> YoloV8::detectObjects(const cv::cuda::GpuMat &inputImageBGR)
         // Since we have a batch size of 1 and 2 outputs, we must convert the output from a 3D array to a 2D array.
         std::vector<std::vector<float>> featureVector;
         Engine<float>::transformOutput(featureVectors, featureVector);
+
         ret = postProcessSegmentation(featureVector);
     }
 #ifdef ENABLE_BENCHMARKS
@@ -142,6 +143,10 @@ std::vector<Object> YoloV8::postProcessSegmentation(std::vector<std::vector<floa
     int numAnchors = outputDims[0].d[2];
 
     const auto numClasses = numChannels - SEG_CHANNELS - 4;
+    // std::cout<<"featureVectors[1] size"<<featureVectors[1].size()<<std::endl;
+    // std::cout<<"SEG_CHANNELS"<<SEG_CHANNELS<<std::endl;
+    // std::cout<<"SEG_H"<<SEG_H<<std::endl;
+    // std::cout<<"SEG_W"<<SEG_W<<std::endl;
 
     // Ensure the output lengths are correct
     if (featureVectors[0].size() != static_cast<size_t>(numChannels) * numAnchors) {
