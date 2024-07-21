@@ -13,13 +13,13 @@ struct YoloV9Config {
     // Calibration data directory. Must be specified when using INT8 precision.
     std::string calibrationDataDirectory;
     // Probability threshold used to filter detected objects
-    float probabilityThreshold = 0.25f;
+    float prob_thres = 0.25f;
     // Non-maximum suppression threshold
-    float nmsThreshold = 0.45f;
+    float nms_thres = 0.45f;
     // Max number of detected objects to return
-    int topK = 1000;
+    int top_k = 1000;
     // Class thresholds (default are COCO classes)
-    std::vector<std::string> classNames = {
+    std::vector<std::string> class_names = {
          "person",         "bicycle",    "car",           "motorcycle",    "airplane",     "bus",           "train",
          "truck",          "boat",       "traffic light", "fire hydrant",  "stop sign",    "parking meter", "bench",
          "bird",           "cat",        "dog",           "horse",         "sheep",        "cow",           "elephant",
@@ -32,15 +32,12 @@ struct YoloV9Config {
          "laptop",         "mouse",      "remote",        "keyboard",      "cell phone",   "microwave",     "oven",
          "toaster",        "sink",       "refrigerator",  "book",          "clock",        "vase",          "scissors",
          "teddy bear",     "hair drier", "toothbrush"};
-
-      //  std::vector<std::string> classNames = {
-      //  "hole", "objects", "oil spot","thread error"};
 };
 
 class YoloV9 {
 public:
     // Builds the onnx model into a TensorRT engine, and loads the engine into memory
-    YoloV9(const std::string &onnxModelPath, const YoloV9Config &config);
+    YoloV9(const std::string& model_dir, const std::string& model_name, const YoloV9Config &config);
 
     // Detect the objects in the image
     std::vector<Object> detectObjects(const cv::Mat &inputImageBGR);

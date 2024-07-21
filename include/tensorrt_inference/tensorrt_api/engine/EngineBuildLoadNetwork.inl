@@ -5,11 +5,12 @@
 namespace tensorrt_inference
 {
 template <typename T>
-bool Engine<T>::buildLoadNetwork(std::string onnxModelPath, const std::array<float, 3> &subVals, const std::array<float, 3> &divVals,
+bool Engine<T>::buildLoadNetwork(const std::string& model_dir, const std::string& model_name, const std::array<float, 3> &subVals, const std::array<float, 3> &divVals,
                                  bool normalize) {
+    const std::string onnxModelPath =  model_dir + "/" + model_name + "/" + model_name + ".onnx"; 
     const auto engineName = serializeEngineOptions(m_options, onnxModelPath);
-    const auto engineDir = std::filesystem::path(m_options.engineFileDir);
-    std::filesystem::path enginePath = engineDir / engineName;
+    const auto engineDir = std::filesystem::path(m_options.engine_file_dir) / model_name;
+    std::filesystem::path enginePath = engineDir / engineName ;
     spdlog::info("Searching for engine file with name: {}", enginePath.string());
 
     if (Util::doesFileExist(enginePath)) {
@@ -360,7 +361,7 @@ bool Engine<T>::build(std::string onnxModelPath, const std::array<float, 3> &sub
     }
 
     // Write the engine to disk
-    const auto enginePath = std::filesystem::path(m_options.engineFileDir) / engineName;
+    const auto enginePath = std::filesystem::path(m_options.engine_file_dir) / engineName;
     std::ofstream outfile(enginePath, std::ofstream::binary);
     outfile.write(reinterpret_cast<const char *>(plan->data()), plan->size());
     spdlog::info("Success, saved engine to {}", enginePath.string());

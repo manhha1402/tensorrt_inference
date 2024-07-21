@@ -120,7 +120,7 @@ inline bool parseArguments(int argc, char *argv[],tensorrt_inference::YoloV9Conf
                 if (!tryParseFloat(nextArgument, value, flag))
                     return false;
 
-                config.probabilityThreshold = value;
+                config.prob_thres = value;
             }
 
             else if (flag == "nms-threshold") {
@@ -131,7 +131,7 @@ inline bool parseArguments(int argc, char *argv[],tensorrt_inference::YoloV9Conf
                 if (!tryParseFloat(nextArgument, value, flag))
                     return false;
 
-                config.nmsThreshold = value;
+                config.nms_thres = value;
             }
 
             else if (flag == "top-k") {
@@ -142,7 +142,7 @@ inline bool parseArguments(int argc, char *argv[],tensorrt_inference::YoloV9Conf
                 if (!tryParseInt(nextArgument, value, flag))
                     return false;
 
-                config.topK = value;
+                config.top_k = value;
             }
 
             else if (flag == "precision") {
@@ -184,7 +184,7 @@ inline bool parseArguments(int argc, char *argv[],tensorrt_inference::YoloV9Conf
                     return false;
                 }
 
-                config.classNames = values;
+                config.class_names = values;
             }
 
             else {
@@ -252,7 +252,7 @@ inline bool parseArgumentsVideo(int argc, char *argv[], tensorrt_inference::Yolo
                 if (!tryParseFloat(nextArgument, value, flag))
                     return false;
 
-                config.probabilityThreshold = value;
+                config.prob_thres = value;
             }
 
             else if (flag == "nms-threshold") {
@@ -263,7 +263,7 @@ inline bool parseArgumentsVideo(int argc, char *argv[], tensorrt_inference::Yolo
                 if (!tryParseFloat(nextArgument, value, flag))
                     return false;
 
-                config.nmsThreshold = value;
+                config.nms_thres = value;
             }
 
             else if (flag == "top-k") {
@@ -274,7 +274,7 @@ inline bool parseArgumentsVideo(int argc, char *argv[], tensorrt_inference::Yolo
                 if (!tryParseInt(nextArgument, value, flag))
                     return false;
 
-                config.topK = value;
+                config.top_k = value;
             }
 
             else if (flag == "precision") {
@@ -316,7 +316,7 @@ inline bool parseArgumentsVideo(int argc, char *argv[], tensorrt_inference::Yolo
                     return false;
                 }
 
-                config.classNames = values;
+                config.class_names = values;
             }
 
             else {
@@ -344,7 +344,7 @@ inline bool parseArgumentsVideo(int argc, char *argv[], tensorrt_inference::Yolo
     return true;
 }
 
-inline bool parseArguments(int argc, char* argv[], tensorrt_inference::YoloV8Config& config, std::string& onnxModelPath, std::string& inputImage) {
+inline bool parseArguments(int argc, char* argv[], tensorrt_inference::YoloV8Config& config, std::string& ModelPath,std::string& model_name, std::string& inputImage) {
     if (argc == 1) {
         showHelp(argv);
         return false;
@@ -389,7 +389,7 @@ inline bool parseArguments(int argc, char* argv[], tensorrt_inference::YoloV8Con
                 if (!tryParseFloat(nextArgument, value, flag))
                     return false;
 
-                config.probabilityThreshold = value;
+                config.prob_thres = value;
             }
 
             else if (flag == "nms-threshold") {
@@ -400,7 +400,7 @@ inline bool parseArguments(int argc, char* argv[], tensorrt_inference::YoloV8Con
                 if (!tryParseFloat(nextArgument, value, flag))
                     return false;
 
-                config.nmsThreshold = value;
+                config.nms_thres = value;
             }
 
             else if (flag == "top-k") {
@@ -411,7 +411,7 @@ inline bool parseArguments(int argc, char* argv[], tensorrt_inference::YoloV8Con
                 if (!tryParseInt(nextArgument, value, flag))
                     return false;
 
-                config.topK = value;
+                config.top_k = value;
             }
 
             else if (flag == "seg-channels") {
@@ -422,7 +422,7 @@ inline bool parseArguments(int argc, char* argv[], tensorrt_inference::YoloV8Con
                 if (!tryParseInt(nextArgument, value, flag))
                     return false;
 
-                config.segChannels = value;
+                config.seg_channels = value;
             }
 
             else if (flag == "seg-h") {
@@ -433,7 +433,7 @@ inline bool parseArguments(int argc, char* argv[], tensorrt_inference::YoloV8Con
                 if (!tryParseInt(nextArgument, value, flag))
                     return false;
 
-                config.segH = value;
+                config.seg_h = value;
             }
 
             else if (flag == "precision") {
@@ -472,7 +472,7 @@ inline bool parseArguments(int argc, char* argv[], tensorrt_inference::YoloV8Con
                 if (!tryParseInt(nextArgument, value, flag))
                     return false;
 
-                config.segW = value;
+                config.seg_w = value;
             }
 
             else if (flag == "seg-threshold") {
@@ -483,7 +483,7 @@ inline bool parseArguments(int argc, char* argv[], tensorrt_inference::YoloV8Con
                 if (!tryParseFloat(nextArgument, value, flag))
                     return false;
 
-                config.segmentationThreshold = value;
+                config.segmentation_thres = value;
             }
 
             else if (flag == "class-names") {
@@ -497,7 +497,7 @@ inline bool parseArguments(int argc, char* argv[], tensorrt_inference::YoloV8Con
                     return false;
                 }
 
-                config.classNames = values;
+                config.class_names = values;
             }
 
             else {
@@ -566,7 +566,7 @@ inline bool parseArgumentsVideo(int argc, char* argv[], tensorrt_inference::Yolo
                 if (!tryParseFloat(nextArgument, value, flag))
                     return false;
 
-                config.probabilityThreshold = value;
+                config.prob_thres = value;
             }
 
             else if (flag == "nms-threshold") {
@@ -577,7 +577,7 @@ inline bool parseArgumentsVideo(int argc, char* argv[], tensorrt_inference::Yolo
                 if (!tryParseFloat(nextArgument, value, flag))
                     return false;
 
-                config.nmsThreshold = value;
+                config.nms_thres = value;
             }
 
             else if (flag == "top-k") {
@@ -588,7 +588,7 @@ inline bool parseArgumentsVideo(int argc, char* argv[], tensorrt_inference::Yolo
                 if (!tryParseInt(nextArgument, value, flag))
                     return false;
 
-                config.topK = value;
+                config.top_k = value;
             }
 
             else if (flag == "seg-channels") {
@@ -599,7 +599,7 @@ inline bool parseArgumentsVideo(int argc, char* argv[], tensorrt_inference::Yolo
                 if (!tryParseInt(nextArgument, value, flag))
                     return false;
 
-                config.segChannels = value;
+                config.seg_channels = value;
             }
 
             else if (flag == "seg-h") {
@@ -610,7 +610,7 @@ inline bool parseArgumentsVideo(int argc, char* argv[], tensorrt_inference::Yolo
                 if (!tryParseInt(nextArgument, value, flag))
                     return false;
 
-                config.segH = value;
+                config.seg_h = value;
             }
 
             else if (flag == "precision") {
@@ -649,7 +649,7 @@ inline bool parseArgumentsVideo(int argc, char* argv[], tensorrt_inference::Yolo
                 if (!tryParseInt(nextArgument, value, flag))
                     return false;
 
-                config.segW = value;
+                config.seg_w = value;
             }
 
             else if (flag == "seg-threshold") {
@@ -660,7 +660,7 @@ inline bool parseArgumentsVideo(int argc, char* argv[], tensorrt_inference::Yolo
                 if (!tryParseFloat(nextArgument, value, flag))
                     return false;
 
-                config.segmentationThreshold = value;
+                config.segmentation_thres = value;
             }
 
             else if (flag == "class-names") {
@@ -674,7 +674,7 @@ inline bool parseArgumentsVideo(int argc, char* argv[], tensorrt_inference::Yolo
                     return false;
                 }
 
-                config.classNames = values;
+                config.class_names = values;
             }
 
             else {

@@ -1,20 +1,15 @@
-#include "cmd_line_util.h"
 #include "tensorrt_inference/yolov8.h"
 
 
 // Runs object detection on an input image then saves the annotated image to disk.
 int main(int argc, char *argv[]) {
     tensorrt_inference::YoloV8Config config;
-    std::string onnxModelPath;
-    std::string inputImage;
-
-    // Parse the command line arguments
-	if (!parseArguments(argc, argv, config, onnxModelPath, inputImage)) {
-		return -1;
-    }
+    std::string inputImage = argv[2];
+    const std::string home_dir = std::getenv("HOME");
+    std::filesystem::path model_path = std::filesystem::path(std::string(std::getenv("HOME"))) / "data" / "weights";
 
     // Create the YoloV8 engine
-    tensorrt_inference::YoloV8 yoloV8(onnxModelPath, config);
+    tensorrt_inference::YoloV8 yoloV8(model_path.string(),argv[1], config);
     std::string class_name  =  "person";
     // Read the input image
     auto img = cv::imread(inputImage);

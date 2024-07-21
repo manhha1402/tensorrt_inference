@@ -1,20 +1,16 @@
-#include "cmd_line_util.h"
 #include "tensorrt_inference/yolov9.h"
 #include <opencv2/cudaimgproc.hpp>
 
 // Runs object detection on video stream then displays annotated results.
 int main(int argc, char *argv[]) {
     tensorrt_inference::YoloV9Config config;
-    std::string onnxModelPath;
-    std::string inputVideo;
+    std::string inputVideo = argv[2];
+    const std::string home_dir = std::getenv("HOME");
+    const std::string model_path  = home_dir + "/data/weights/";
 
-    // Parse the command line arguments
-    if (!parseArgumentsVideo(argc, argv, config, onnxModelPath, inputVideo)) {
-        return -1;
-    }
 
     // Create the YoloV9 engine
-    tensorrt_inference::YoloV9 yoloV9(onnxModelPath, config);
+    tensorrt_inference::YoloV9 yoloV9(model_path,argv[1], config);
 
     // Initialize the video stream
     cv::VideoCapture cap;

@@ -10,7 +10,7 @@ template <typename T>
 class IEngine {
 public:
     virtual ~IEngine() = default;
-    virtual bool buildLoadNetwork(std::string onnxModelPath, const std::array<float, 3> &subVals = {0.f, 0.f, 0.f},
+    virtual bool buildLoadNetwork(const std::string& model_dir, const std::string& model_name, const std::array<float, 3> &subVals = {0.f, 0.f, 0.f},
                                   const std::array<float, 3> &divVals = {1.f, 1.f, 1.f}, bool normalize = true) = 0;
     virtual bool loadNetwork(std::string trtModelPath, const std::array<float, 3> &subVals = {0.f, 0.f, 0.f},
                              const std::array<float, 3> &divVals = {1.f, 1.f, 1.f}, bool normalize = true) = 0;

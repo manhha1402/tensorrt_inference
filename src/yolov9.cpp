@@ -2,9 +2,9 @@
 #include <opencv2/cudaimgproc.hpp>
 namespace tensorrt_inference
 {
-YoloV9::YoloV9(const std::string &onnxModelPath, const YoloV9Config &config)
-    : PROBABILITY_THRESHOLD(config.probabilityThreshold), NMS_THRESHOLD(config.nmsThreshold), TOP_K(config.topK),
-      CLASS_NAMES(config.classNames) {
+YoloV9::YoloV9(const std::string& model_dir, const std::string& model_name, const YoloV9Config &config)
+    : PROBABILITY_THRESHOLD(config.prob_thres), NMS_THRESHOLD(config.nms_thres), TOP_K(config.top_k),
+      CLASS_NAMES(config.class_names) {
     // Specify options for GPU inference
     Options options;
     options.optBatchSize = 1;
@@ -12,6 +12,7 @@ YoloV9::YoloV9(const std::string &onnxModelPath, const YoloV9Config &config)
 
     options.precision = config.precision;
     options.calibrationDataDirectoryPath = config.calibrationDataDirectory;
+    options.engine_file_dir = model_dir;
 
     if (options.precision == Precision::INT8) {
         if (options.calibrationDataDirectoryPath.empty()) {
@@ -25,7 +26,7 @@ YoloV9::YoloV9(const std::string &onnxModelPath, const YoloV9Config &config)
     // Build the onnx model into a TensorRT engine file, cache the file to disk, and then load the TensorRT engine file into memory.
     // If the engine file already exists on disk, this function will not rebuild but only load into memory.
     // The engine file is rebuilt any time the above Options are changed.
-    auto succ = m_trtEngine->buildLoadNetwork(onnxModelPath, SUB_VALS, DIV_VALS, NORMALIZE);
+    auto succ = m_trtEngine->buildLoadNetwork(model_dir, model_name, SUB_VALS, DIV_VALS, NORMALIZE);
     if (!succ) {
         const std::string errMsg = "Error: Unable to build or load the TensorRT engine. "
                                    "Try increasing TensorRT log severity to kVERBOSE (in /libs/tensorrt-cpp-api/engine.cpp).";

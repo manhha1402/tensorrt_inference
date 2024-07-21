@@ -12,21 +12,21 @@ struct YoloV8Config {
     // Calibration data directory. Must be specified when using INT8 precision.
     std::string calibrationDataDirectory;
     // Probability threshold used to filter detected objects
-    float probabilityThreshold = 0.25f;
+    float prob_thres = 0.25f;
     // Non-maximum suppression threshold
-    float nmsThreshold = 0.65f;
+    float nms_thres = 0.65f;
     // Max number of detected objects to return
-    int topK = 100;
+    int top_k = 100;
     // Segmentation config options
-    int segChannels = 32;
-    int segH = 160;//160 yolo8-seg 256 fastsam
-    int segW = 160; //160 yolo8-seg 256 fastsam
-    float segmentationThreshold = 0.5f;
+    int seg_channels = 32;
+    int seg_h = 160;//160 yolo8-seg 256 fastsam
+    int seg_w = 160; //160 yolo8-seg 256 fastsam
+    float segmentation_thres = 0.5f;
     // Pose estimation options
-    int numKPS = 17;
-    float kpsThreshold = 0.5f;
+    int num_kps = 17;
+    float kps_thres = 0.5f;
     // Class thresholds (default are COCO classes)
-    std::vector<std::string> classNames = {
+    std::vector<std::string> class_names = {
         "person",         "bicycle",    "car",           "motorcycle",    "airplane",     "bus",           "train",
         "truck",          "boat",       "traffic light", "fire hydrant",  "stop sign",    "parking meter", "bench",
         "bird",           "cat",        "dog",           "horse",         "sheep",        "cow",           "elephant",
@@ -39,14 +39,13 @@ struct YoloV8Config {
         "laptop",         "mouse",      "remote",        "keyboard",      "cell phone",   "microwave",     "oven",
         "toaster",        "sink",       "refrigerator",  "book",          "clock",        "vase",          "scissors",
         "teddy bear",     "hair drier", "toothbrush"};
-    //std::vector<std::string> classNames = {"defects"};
 };
 
 class YoloV8 {
 public:
 
     // Builds the onnx model into a TensorRT engine, and loads the engine into memory
-    YoloV8(const std::string &onnxModelPath, const YoloV8Config &config);
+    YoloV8(const std::string& model_dir, const std::string& model_name, const YoloV8Config &config);
 
     // Detect the objects in the image
     std::vector<Object> detectObjects(const cv::Mat &inputImageBGR);

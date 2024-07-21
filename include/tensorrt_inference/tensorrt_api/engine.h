@@ -49,8 +49,7 @@ struct Options {
     // GPU device index
     int deviceIndex = 0;
     // Directory where the engine file should be saved
-    const std::string home_dir_path =  std::getenv("HOME");
-    std::string engineFileDir = home_dir_path + "/data/weights/";
+    std::string engine_file_dir = "";
 };
 
 // Class to extend TensorRT logger
@@ -73,7 +72,7 @@ public:
     //    subVals = {0.5f, 0.5f, 0.5f};
     //    divVals = {0.5f, 0.5f, 0.5f};
     //    normalize = true;
-    bool buildLoadNetwork(std::string onnxModelPath, const std::array<float, 3> &subVals = {0.f, 0.f, 0.f},
+    bool buildLoadNetwork(const std::string& model_dir, const std::string& model_name, const std::array<float, 3> &subVals = {0.f, 0.f, 0.f},
                           const std::array<float, 3> &divVals = {1.f, 1.f, 1.f}, bool normalize = true) override;
 
     // Load a TensorRT engine file from disk into memory
