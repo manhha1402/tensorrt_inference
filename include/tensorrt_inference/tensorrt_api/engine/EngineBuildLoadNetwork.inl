@@ -186,7 +186,10 @@ bool Engine<T>::loadNetwork(std::string trtModelPath, const std::array<float, 3>
             throw std::runtime_error(msg);
         }
     }
-
+    for (size_t i = 0; i < m_outputDims.size(); ++i) {
+        spdlog::info("Input dimensions of model: ({}, {}, {}, {})",i, m_inputDims[i].d[0], m_inputDims[i].d[1], m_inputDims[i].d[2]);
+        spdlog::info("Output dimensions of model: ({}, {}, {}, {})",i, m_outputDims[i].d[0], m_outputDims[i].d[1], m_outputDims[i].d[2]);
+    }
     // Synchronize and destroy the cuda stream
     Util::checkCudaErrorCode(cudaStreamSynchronize(stream));
     Util::checkCudaErrorCode(cudaStreamDestroy(stream));
@@ -286,7 +289,8 @@ bool Engine<T>::build(std::string onnxModelPath, const std::array<float, 3> &sub
         int32_t inputC = inputDims.d[1];
         int32_t inputH = inputDims.d[2];
         int32_t inputW = inputDims.d[3];
-
+        spdlog::info("Input name and dimensions of model: ({} : {}, {}, {})",inputName, inputC, inputH, inputW);
+    
         // Specify the optimization profile`
         if (doesSupportDynamicBatch) {
             optProfile->setDimensions(inputName, nvinfer1::OptProfileSelector::kMIN, nvinfer1::Dims4(1, inputC, inputH, inputW));

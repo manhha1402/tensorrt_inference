@@ -63,8 +63,8 @@ bool Engine<T>::runInference(const std::vector<std::vector<cv::cuda::GpuMat>> &i
         if (input.channels() != dims.d[0] || input.rows != dims.d[1] || input.cols != dims.d[2]) {
             spdlog::error("===== Error =====");
             spdlog::error("Input does not have correct size!");
-            spdlog::error("Expected: ({}, {}, {})", dims.d[0], dims.d[1], dims.d[2]);
-            spdlog::error("Got: ({}, {}, {})", input.channels(), input.rows, input.cols);
+            spdlog::error("Expected dimensions: ({}, {}, {})", dims.d[0], dims.d[1], dims.d[2]);
+            spdlog::error("Got dimensions: ({}, {}, {})", input.channels(), input.rows, input.cols);
             spdlog::error("Ensure you resize your input image to the correct size");
             return false;
         }
