@@ -15,12 +15,11 @@ void Engine<T>::transformOutput(std::vector<std::vector<std::vector<T>>> &input,
 }
 
 template <typename T> void Engine<T>::transformOutput(std::vector<std::vector<std::vector<T>>> &input, std::vector<T> &output) {
-    if (input.size() != 1 || input[0].size() != 1) {
-        auto msg = "The feature vector has incorrect dimensions!";
-        spdlog::error(msg);
-        throw std::logic_error(msg);
-    }
-
+    // if (input.size() != 1 || input[0].size() != 1) {
+    //     auto msg = "The feature vector has incorrect dimensions!";
+    //     spdlog::error(msg);
+    //     throw std::logic_error(msg);
+    // }
     output = std::move(input[0][0]);
 }
 

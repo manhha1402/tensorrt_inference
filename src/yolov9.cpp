@@ -2,7 +2,7 @@
 #include <opencv2/cudaimgproc.hpp>
 namespace tensorrt_inference
 {
-YoloV9::YoloV9(const std::string& model_dir, const std::string& model_name, const YoloV9Config &config)
+YoloV9::YoloV9(const std::string& onnx_file, const YoloV9Config &config)
     : PROBABILITY_THRESHOLD(config.prob_thres), NMS_THRESHOLD(config.nms_thres), TOP_K(config.top_k),
       CLASS_NAMES(config.class_names) {
     // Specify options for GPU inference
@@ -12,7 +12,7 @@ YoloV9::YoloV9(const std::string& model_dir, const std::string& model_name, cons
 
     options.precision = config.precision;
     options.calibrationDataDirectoryPath = config.calibrationDataDirectory;
-    options.engine_file_dir = model_dir;
+    options.engine_file_dir = getFolderOfFile(onnx_file);
 
     if (options.precision == Precision::INT8) {
         if (options.calibrationDataDirectoryPath.empty()) {
@@ -26,7 +26,7 @@ YoloV9::YoloV9(const std::string& model_dir, const std::string& model_name, cons
     // Build the onnx model into a TensorRT engine file, cache the file to disk, and then load the TensorRT engine file into memory.
     // If the engine file already exists on disk, this function will not rebuild but only load into memory.
     // The engine file is rebuilt any time the above Options are changed.
-    auto succ = m_trtEngine->buildLoadNetwork(model_dir, model_name, SUB_VALS, DIV_VALS, NORMALIZE);
+    auto succ = m_trtEngine->buildLoadNetwork(onnx_file,  SUB_VALS, DIV_VALS, NORMALIZE);
     if (!succ) {
         const std::string errMsg = "Error: Unable to build or load the TensorRT engine. "
                                    "Try increasing TensorRT log severity to kVERBOSE (in /libs/tensorrt-cpp-api/engine.cpp).";
@@ -94,7 +94,6 @@ std::vector<Object> YoloV9::detectObjects(const cv::cuda::GpuMat &inputImageBGR)
     // Check if our model does only object detection or also supports segmentation
     std::vector<Object> ret;
     const auto &numOutputs = m_trtEngine->getOutputDims().size();
-
     if (numOutputs == 1) {
         // Object detection or pose estimation
         // Since we have a batch size of 1 and only 1 output, we must convert the output from a 3D array to a 1D array.

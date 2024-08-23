@@ -2,7 +2,7 @@
 #include <opencv2/cudaimgproc.hpp>
 namespace tensorrt_inference
 {
-YoloV8::YoloV8(const std::string& model_dir, const std::string& model_name, const YoloV8Config &config)
+YoloV8::YoloV8(const std::string& onnx_file, const YoloV8Config &config)
     : PROBABILITY_THRESHOLD(config.prob_thres), NMS_THRESHOLD(config.nms_thres), TOP_K(config.top_k),
       SEG_CHANNELS(config.seg_channels), SEG_H(config.seg_h), SEG_W(config.seg_w), SEGMENTATION_THRESHOLD(config.segmentation_thres),
       CLASS_NAMES(config.class_names), NUM_KPS(config.num_kps), KPS_THRESHOLD(config.kps_thres) {
@@ -13,7 +13,9 @@ YoloV8::YoloV8(const std::string& model_dir, const std::string& model_name, cons
 
     options.precision = config.precision;
     options.calibrationDataDirectoryPath = config.calibrationDataDirectory;
-    options.engine_file_dir = model_dir;
+
+
+    options.engine_file_dir = getFolderOfFile(onnx_file);
     if (options.precision == Precision::INT8) {
         if (options.calibrationDataDirectoryPath.empty()) {
             throw std::runtime_error("Error: Must supply calibration data path for INT8 calibration");
@@ -25,7 +27,7 @@ YoloV8::YoloV8(const std::string& model_dir, const std::string& model_name, cons
     // Build the onnx model into a TensorRT engine file, cache the file to disk, and then load the TensorRT engine file into memory.
     // If the engine file already exists on disk, this function will not rebuild but only load into memory.
     // The engine file is rebuilt any time the above Options are changed.
-    auto succ = m_trtEngine->buildLoadNetwork(model_dir,model_name, SUB_VALS, DIV_VALS, NORMALIZE);
+    auto succ = m_trtEngine->buildLoadNetwork(onnx_file, SUB_VALS, DIV_VALS, NORMALIZE);
     if (!succ) {
         const std::string errMsg = "Error: Unable to build or load the TensorRT engine. "
                                    "Try increasing TensorRT log severity to kVERBOSE (in /libs/tensorrt-cpp-api/engine.cpp).";
@@ -141,11 +143,6 @@ std::vector<Object> YoloV8::postProcessSegmentation(std::vector<std::vector<floa
     int numAnchors = outputDims[0].d[2];
 
     const auto numClasses = numChannels - SEG_CHANNELS - 4;
-    // std::cout<<"featureVectors[1] size"<<featureVectors[1].size()<<std::endl;
-    // std::cout<<"SEG_CHANNELS"<<SEG_CHANNELS<<std::endl;
-    // std::cout<<"SEG_H"<<SEG_H<<std::endl;
-    // std::cout<<"SEG_W"<<SEG_W<<std::endl;
-
     // Ensure the output lengths are correct
     if (featureVectors[0].size() != static_cast<size_t>(numChannels) * numAnchors) {
         throw std::logic_error("Output at index 0 has incorrect length");
@@ -244,7 +241,7 @@ std::vector<Object> YoloV8::postProcessSegmentation(std::vector<std::vector<floa
             dest = 1.0 / (1.0 + dest);
             dest = dest(roi);
             cv::resize(dest, mask, cv::Size(static_cast<int>(m_imgWidth), static_cast<int>(m_imgHeight)), cv::INTER_LINEAR);
-            objs[i].boxMask = mask(objs[i].rect) > SEGMENTATION_THRESHOLD;
+            objs[i].box_mask = mask(objs[i].rect) > SEGMENTATION_THRESHOLD;
         }
     }
 
@@ -470,14 +467,14 @@ void YoloV8::drawSegmentation(cv::Mat &mask, const Object &object)
     int colorIndex = object.label % COLOR_LIST.size(); // We have only defined 80 unique colors
     cv::Scalar color = cv::Scalar(COLOR_LIST[colorIndex][0], COLOR_LIST[colorIndex][1], COLOR_LIST[colorIndex][2]);
     // Add the mask for said object
-    mask(object.rect).setTo(color * 255, object.boxMask);
+    mask(object.rect).setTo(color * 255, object.box_mask);
 }
 
 void YoloV8::drawObjectLabels(cv::Mat &image, const std::vector<Object> &objects,
 const std::vector<std::string>& detected_class, unsigned int scale) 
 {
     // If segmentation information is present, start with that
-    if (!objects.empty() && !objects[0].boxMask.empty()) 
+    if (!objects.empty() && !objects[0].box_mask.empty()) 
     {
         cv::Mat mask = image.clone();
         for (const auto &object : objects) {

@@ -35,6 +35,7 @@ set(CUDA_TOOLKIT_ROOT_DIR /usr/local/cuda)
 find_package(CUDA REQUIRED)
 find_package(TensorRT REQUIRED)
 find_package(OpenCV REQUIRED)
+find_package(YAML-CPP REQUIRED)
 find_package(fmt REQUIRED)
 
 include_directories(include)
@@ -42,12 +43,18 @@ include_directories(include)
 # Build the YoloV9 library
 add_library(${PROJECT_NAME}_lib SHARED 
                 src/tensorrt_api/engine.cpp
+                src/model.cpp
+                src/face.cpp
+                src/detection.cpp
                 src/yolov8.cpp
                 src/yolov9.cpp
+                src/retinaface.cpp
+                src/yolo9_refactor.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC 
                         ${OpenCV_LIBRARIES}
+                        ${YAML_CPP_LIBRARIES}
                         ${CUDA_LIBRARIES} 
                         ${CMAKE_THREAD_LIBS_INIT} 
                         ${TensorRT_LIBRARIES}
@@ -65,20 +72,24 @@ target_include_directories(
 
 
 # Build and link the executables
-add_executable(detect_object_image nodes/object_detection_image.cpp)
-target_link_libraries(detect_object_image ${PROJECT_NAME}_lib)
+add_executable(yolo9_refactor_test nodes/yolo9_refactor_test.cpp)
+target_link_libraries(yolo9_refactor_test ${PROJECT_NAME}_lib)
 
 # Build and link the executables
 add_executable(object_detection_image_yolo8 nodes/object_detection_image_yolo8.cpp)
 target_link_libraries(object_detection_image_yolo8 ${PROJECT_NAME}_lib)
 
 
-add_executable(detect_object_video nodes/object_detection_video_stream.cpp)
-target_link_libraries(detect_object_video ${PROJECT_NAME}_lib)
+add_executable(object_detection_image nodes/object_detection_image.cpp)
+target_link_libraries(object_detection_image ${PROJECT_NAME}_lib)
 
 add_executable(object_detection_video_stream_yolov8 nodes/object_detection_video_stream_yolov8.cpp)
 target_link_libraries(object_detection_video_stream_yolov8 ${PROJECT_NAME}_lib)
 
+# arcface
+
+add_executable(retina_test nodes/retina_test.cpp)
+target_link_libraries(retina_test ${PROJECT_NAME}_lib)
 
 ##########
 # EXPORT #
@@ -95,7 +106,7 @@ install(
 )
 
 install(
-  TARGETS detect_object_image object_detection_image_yolo8 detect_object_video object_detection_video_stream_yolov8
+  TARGETS object_detection_image object_detection_image_yolo8 yolo9_refactor_test object_detection_video_stream_yolov8
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
 )
 

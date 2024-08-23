@@ -16,3 +16,5 @@ with open( (model_dir / class_list_file).as_posix() + ".yaml" , 'w') as f:
 model.fuse()
 model.info(verbose=False)  # Print model information
 model.export(format="onnx", simplify=True)
+
+

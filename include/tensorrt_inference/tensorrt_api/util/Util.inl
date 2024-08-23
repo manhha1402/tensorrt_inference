@@ -29,4 +29,16 @@ inline std::vector<std::string> getFilesInDirectory(const std::string &dirPath) 
         return fileNames;
     }
 }
+inline std::filesystem::path getFolderOfFile(const std::string& filepath)
+{
+    std::filesystem::path pathObj(filepath);
+
+    // Check if the provided path exists and is a file
+    if (std::filesystem::exists(pathObj) && std::filesystem::is_regular_file(pathObj)) {
+        // Return the parent directory of the file
+        return pathObj.parent_path();
+    }
+    // Return an empty string if the path does not exist or is not a file
+    return std::filesystem::path("");
+}
 }

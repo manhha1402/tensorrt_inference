@@ -72,7 +72,7 @@ public:
     //    subVals = {0.5f, 0.5f, 0.5f};
     //    divVals = {0.5f, 0.5f, 0.5f};
     //    normalize = true;
-    bool buildLoadNetwork(const std::string& model_dir, const std::string& model_name, const std::array<float, 3> &subVals = {0.f, 0.f, 0.f},
+    bool buildLoadNetwork(const std::string& onnx_file, const std::array<float, 3> &subVals = {0.f, 0.f, 0.f},
                           const std::array<float, 3> &divVals = {1.f, 1.f, 1.f}, bool normalize = true) override;
 
     // Load a TensorRT engine file from disk into memory
@@ -83,7 +83,7 @@ public:
     //    subVals = {0.5f, 0.5f, 0.5f};
     //    divVals = {0.5f, 0.5f, 0.5f};
     //    normalize = true;
-    bool loadNetwork(std::string trtModelPath, const std::array<float, 3> &subVals = {0.f, 0.f, 0.f},
+    bool loadNetwork(const std::string engile_file, const std::array<float, 3> &subVals = {0.f, 0.f, 0.f},
                      const std::array<float, 3> &divVals = {1.f, 1.f, 1.f}, bool normalize = true) override;
 
     // Run inference.
@@ -118,7 +118,7 @@ public:
 
 private:
     // Build the network
-    bool build(std::string onnxModelPath, const std::array<float, 3> &subVals, const std::array<float, 3> &divVals, bool normalize);
+    bool build(const std::string& onnxModelPath, const std::array<float, 3> &subVals, const std::array<float, 3> &divVals, bool normalize);
 
     // Converts the engine options into a string
     std::string serializeEngineOptions(const Options &options, const std::string &onnxModelPath);

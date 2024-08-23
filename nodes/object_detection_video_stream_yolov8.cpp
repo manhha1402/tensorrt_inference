@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
     const std::string model_path  = home_dir + "/data/weights/";
 
 	// Create the YoloV8 engine
-	tensorrt_inference::YoloV8 yoloV8(model_path,argv[1], config);
+	tensorrt_inference::YoloV8 yoloV8(model_path, config);
 
 	// Initialize the video stream
 	cv::VideoCapture cap;

@@ -16,6 +16,9 @@ namespace Util {
 
     // Retrieves a list of file names in the specified directory
     std::vector<std::string> getFilesInDirectory(const std::string &dirPath);
+
+    // Get folder of given filepath
+    std::filesystem::path getFolderOfFile(const std::string& filepath);
 }
 }
 #include "tensorrt_inference/tensorrt_api/util/Util.inl"

@@ -5,10 +5,12 @@ int main(int argc, char *argv[]) {
     tensorrt_inference::YoloV9Config config;
 
     std::string inputImage = argv[2];
-    const std::string home_dir = std::getenv("HOME");
-    const std::string model_path  = home_dir + "/data/weights/";
+    std::string model_name = argv[1];
+
+    std::string onnx_file = (std::filesystem::path(std::string(std::getenv("HOME"))) / "data" / "weights" / model_name).string() + "/" + model_name + ".onnx";
+
     // Create the YoloV9 engine
-    tensorrt_inference::YoloV9 yoloV9(model_path,argv[1], config);
+    tensorrt_inference::YoloV9 yoloV9(onnx_file, config);
 
     // Read the input image
     auto img = cv::imread(inputImage);

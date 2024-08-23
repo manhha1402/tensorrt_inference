@@ -5,36 +5,37 @@
 namespace tensorrt_inference
 {
 template <typename T>
-bool Engine<T>::buildLoadNetwork(const std::string& model_dir, const std::string& model_name, const std::array<float, 3> &subVals, const std::array<float, 3> &divVals,
+bool Engine<T>::buildLoadNetwork(const std::string& onnx_file, const std::array<float, 3> &subVals, const std::array<float, 3> &divVals,
                                  bool normalize) {
-    const std::string onnxModelPath =  model_dir + "/" + model_name + "/" + model_name + ".onnx"; 
-    const auto engineName = serializeEngineOptions(m_options, onnxModelPath);
-    const auto engineDir = std::filesystem::path(m_options.engine_file_dir) / model_name;
-    std::filesystem::path enginePath = engineDir / engineName ;
-    spdlog::info("Searching for engine file with name: {}", enginePath.string());
+    // get engine name
+    const auto engine_name = serializeEngineOptions(m_options, onnx_file);
+    // get engine directory
+    const auto engine_dir = std::filesystem::path(m_options.engine_file_dir) ;
+    std::filesystem::path engine_path = engine_dir / engine_name;
+    spdlog::info("Searching for engine file with name: {}", engine_path.string());
 
-    if (Util::doesFileExist(enginePath)) {
+    if (Util::doesFileExist(engine_path)) {
         spdlog::info("Engine found, not regenerating...");
     } else {
-        if (!Util::doesFileExist(onnxModelPath)) {
-            auto msg = "Could not find ONNX model at path: " + onnxModelPath;
+        if (!Util::doesFileExist(onnx_file)) {
+            auto msg = "Could not find ONNX model at path: " + onnx_file;
             spdlog::error(msg);
             throw std::runtime_error(msg);
         }
 
         spdlog::info("Engine not found, generating. This could take a while...");
-        if (!std::filesystem::exists(engineDir)) {
-            std::filesystem::create_directories(engineDir);
-            spdlog::info("Created directory: {}", engineDir.string());
+        if (!std::filesystem::exists(engine_dir)) {
+            std::filesystem::create_directories(engine_dir);
+            spdlog::info("Created directory: {}", engine_dir.string());
         }
 
-        auto ret = build(onnxModelPath, subVals, divVals, normalize);
+        auto ret = build(onnx_file, subVals, divVals, normalize);
         if (!ret) {
             return false;
         }
     }
 
-    return loadNetwork(enginePath, subVals, divVals, normalize);
+    return loadNetwork(engine_path, subVals, divVals, normalize);
 }
 
 template <typename T>
@@ -98,8 +99,7 @@ bool Engine<T>::loadNetwork(std::string trtModelPath, const std::array<float, 3>
     // Storage for holding the input and output buffers
     // This will be passed to TensorRT for inference
     clearGpuBuffers();
-    m_buffers.resize(m_engine->getNbIOTensors());
-
+    m_buffers.resize(m_engine->getNbIOTensors()); //getNbBindings
     m_outputLengths.clear();
     m_inputDims.clear();
     m_outputDims.clear();
@@ -115,7 +115,7 @@ bool Engine<T>::loadNetwork(std::string trtModelPath, const std::array<float, 3>
         const auto tensorName = m_engine->getIOTensorName(i);
         m_IOTensorNames.emplace_back(tensorName);
         const auto tensorType = m_engine->getTensorIOMode(tensorName);
-        const auto tensorShape = m_engine->getTensorShape(tensorName);
+        const auto tensorShape = m_engine->getTensorShape(tensorName); // getBindingDimensions
         const auto tensorDataType = m_engine->getTensorDataType(tensorName);
 
         if (tensorType == nvinfer1::TensorIOMode::kINPUT) {
@@ -186,6 +186,7 @@ bool Engine<T>::loadNetwork(std::string trtModelPath, const std::array<float, 3>
             throw std::runtime_error(msg);
         }
     }
+    spdlog::info("In/Out dimensions of model: ({}, {})", m_inputDims.size(), m_outputDims.size());
     for (size_t i = 0; i < m_outputDims.size(); ++i) {
         spdlog::info("Input dimensions of model: ({}, {}, {}, {})",i, m_inputDims[i].d[0], m_inputDims[i].d[1], m_inputDims[i].d[2]);
         spdlog::info("Output dimensions of model: ({}, {}, {}, {})",i, m_outputDims[i].d[0], m_outputDims[i].d[1], m_outputDims[i].d[2]);
@@ -199,7 +200,7 @@ bool Engine<T>::loadNetwork(std::string trtModelPath, const std::array<float, 3>
 
 
 template <typename T>
-bool Engine<T>::build(std::string onnxModelPath, const std::array<float, 3> &subVals, const std::array<float, 3> &divVals, bool normalize) {
+bool Engine<T>::build(const std::string& onnxModelPath, const std::array<float, 3> &subVals, const std::array<float, 3> &divVals, bool normalize) {
     // Create our engine builder.
     auto builder = std::unique_ptr<nvinfer1::IBuilder>(nvinfer1::createInferBuilder(m_logger));
     if (!builder) {

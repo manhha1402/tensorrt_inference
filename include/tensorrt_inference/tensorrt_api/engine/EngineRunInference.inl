@@ -70,8 +70,7 @@ bool Engine<T>::runInference(const std::vector<std::vector<cv::cuda::GpuMat>> &i
         }
 
         nvinfer1::Dims4 inputDims = {batchSize, dims.d[0], dims.d[1], dims.d[2]};
-        m_context->setInputShape(m_IOTensorNames[i].c_str(),
-                                 inputDims); // Define the batch size
+        m_context->setInputShape(m_IOTensorNames[i].c_str(),inputDims); // Define the batch size
 
         // OpenCV reads images into memory in NHWC format, while TensorRT expects
         // images in NCHW format. The following method converts NHWC to NCHW. Even
@@ -107,7 +106,7 @@ bool Engine<T>::runInference(const std::vector<std::vector<cv::cuda::GpuMat>> &i
 
     // Copy the outputs back to CPU
     featureVectors.clear();
-
+    std::cout<<"tensor size:"<<m_engine->getNbIOTensors()<<std::endl;
     for (int batch = 0; batch < batchSize; ++batch) {
         // Batch
         std::vector<std::vector<T>> batchOutputs{};

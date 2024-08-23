@@ -45,7 +45,7 @@ class YoloV8 {
 public:
 
     // Builds the onnx model into a TensorRT engine, and loads the engine into memory
-    YoloV8(const std::string& model_dir, const std::string& model_name, const YoloV8Config &config);
+    YoloV8(const std::string& onnx_file, const YoloV8Config &config);
 
     // Detect the objects in the image
     std::vector<Object> detectObjects(const cv::Mat &inputImageBGR);
