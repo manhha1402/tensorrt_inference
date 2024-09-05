@@ -19,11 +19,13 @@ protected:
     // Preprocess the input
     std::vector<std::vector<cv::cuda::GpuMat>> preprocess(const cv::cuda::GpuMat &gpuImg);
     std::string onnx_file_;
-    std::string labels_file_;
 
-    const std::array<float, 3> SUB_VALS{0.f, 0.f, 0.f};
+    //const std::array<float, 3> SUB_VALS{0.f, 0.f, 0.f};
+    //const std::array<float, 3> DIV_VALS{1.f, 1.f, 1.f};
+
+    const std::array<float, 3> SUB_VALS{104.0f, 117.0f, 123.0f};
     const std::array<float, 3> DIV_VALS{1.f, 1.f, 1.f};
-    const bool NORMALIZE = true;
+    const bool NORMALIZE = false;
 
     float m_ratio = 1;
     float m_imgWidth = 0;

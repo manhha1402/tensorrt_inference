@@ -10,6 +10,9 @@ std::vector<Object> YoloV9Refactor::postprocessDetect(std::vector<float> &featur
     const auto &outputDims = m_trtEngine->getOutputDims();
     auto numChannels = outputDims[0].d[1];
     auto numAnchors = outputDims[0].d[2];
+    std::cout<<"numChannels: "<<numChannels<<std::endl;
+    std::cout<<"numAnchors: "<<numAnchors<<std::endl;
+
     std::vector<cv::Rect> bboxes;
     std::vector<float> scores;
     std::vector<int> labels;

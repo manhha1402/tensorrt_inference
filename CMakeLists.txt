@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 message(STATUS "Configuring with CMake ${CMAKE_VERSION}")
 project(tensorrt_inference VERSION 0.0.1
-               DESCRIPTION "NEURA Surface Matching"
+               DESCRIPTION "TensorRT Inference"
                LANGUAGES CXX CUDA)
 # Use ccache to speed up rebuilds
 include(cmake/ccache.cmake)

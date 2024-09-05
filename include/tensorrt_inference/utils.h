@@ -33,6 +33,7 @@ struct FaceBox{
     cv::Rect_<float> rect;
     std::vector<KeyPoint> key_points;
     bool has_mask = false;
+    float score = 0;
 };
 
 

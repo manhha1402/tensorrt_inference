@@ -9,7 +9,7 @@ int main(int argc, char *argv[]) {
     YAML::Node config = YAML::LoadFile(config_file);
     tensorrt_inference::YoloV9Refactor yolo9(model_path.string(),config);
      // Read the input image
-    std::string inputImage = argv[2];
+    std::string inputImage = argv[1];
     auto img = cv::imread(inputImage);
     if (img.empty()) {
         std::cout << "Error: Unable to read image at path '" << inputImage << "'" << std::endl;

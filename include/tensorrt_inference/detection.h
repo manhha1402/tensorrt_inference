@@ -5,6 +5,7 @@
 #include "tensorrt_inference/utils.h"
 #include <yaml-cpp/yaml.h>
 #include <tensorrt_inference/model.h>
+
 namespace tensorrt_inference
 {
 

@@ -104,7 +104,7 @@ bool Engine<T>::loadNetwork(std::string trtModelPath, const std::array<float, 3>
     m_inputDims.clear();
     m_outputDims.clear();
     m_IOTensorNames.clear();
-
+    std::cout<<"getNbIOTensors: "<<m_engine->getNbIOTensors()<<std::endl;
     // Create a cuda stream
     cudaStream_t stream;
     Util::checkCudaErrorCode(cudaStreamCreate(&stream));
@@ -179,6 +179,7 @@ bool Engine<T>::loadNetwork(std::string trtModelPath, const std::array<float, 3>
             // Now size the output buffer appropriately, taking into account the max
             // possible batch size (although we could actually end up using less
             // memory)
+            std::cout<<"kOUTPUT "<<i<<std::endl;
             Util::checkCudaErrorCode(cudaMallocAsync(&m_buffers[i], outputLength * m_options.maxBatchSize * sizeof(T), stream));
         } else {
             auto msg = "Error, IO Tensor is neither an input or output!";
@@ -188,7 +189,6 @@ bool Engine<T>::loadNetwork(std::string trtModelPath, const std::array<float, 3>
     }
     spdlog::info("In/Out dimensions of model: ({}, {})", m_inputDims.size(), m_outputDims.size());
     for (size_t i = 0; i < m_outputDims.size(); ++i) {
-        spdlog::info("Input dimensions of model: ({}, {}, {}, {})",i, m_inputDims[i].d[0], m_inputDims[i].d[1], m_inputDims[i].d[2]);
         spdlog::info("Output dimensions of model: ({}, {}, {}, {})",i, m_outputDims[i].d[0], m_outputDims[i].d[1], m_outputDims[i].d[2]);
     }
     // Synchronize and destroy the cuda stream
@@ -274,6 +274,23 @@ bool Engine<T>::build(const std::string& onnxModelPath, const std::array<float, 
             throw std::runtime_error(msg);
         }
     }
+    const auto input3Batch = network->getInput(0)->getDimensions().d[3];
+    bool doesSupportDynamicWidth = false;
+    if (input3Batch == -1) {
+        doesSupportDynamicWidth = true;
+        spdlog::info("Model supports dynamic width. Using Options.maxInputWidth, Options.minInputWidth, and Options.optInputWidth to set the input width.");
+
+        // Check that the values of maxInputWidth, minInputWidth, and optInputWidth are valid
+        if (m_options.maxInputWidth < m_options.minInputWidth || m_options.maxInputWidth < m_options.optInputWidth ||
+            m_options.minInputWidth > m_options.optInputWidth
+            || m_options.maxInputWidth < 1 || m_options.minInputWidth < 1 || m_options.optInputWidth < 1) {
+            auto msg = "Error, invalid values for Options.maxInputWidth, Options.minInputWidth, and Options.optInputWidth";
+            spdlog::error(msg);
+            throw std::runtime_error(msg);
+        }
+    }
+
+
 
     auto config = std::unique_ptr<nvinfer1::IBuilderConfig>(builder->createBuilderConfig());
     if (!config) {
@@ -290,19 +307,35 @@ bool Engine<T>::build(const std::string& onnxModelPath, const std::array<float, 
         int32_t inputC = inputDims.d[1];
         int32_t inputH = inputDims.d[2];
         int32_t inputW = inputDims.d[3];
+        int32_t minInputWidth = std::max(m_options.minInputWidth, inputW);
         spdlog::info("Input name and dimensions of model: ({} : {}, {}, {})",inputName, inputC, inputH, inputW);
     
         // Specify the optimization profile`
         if (doesSupportDynamicBatch) {
-            optProfile->setDimensions(inputName, nvinfer1::OptProfileSelector::kMIN, nvinfer1::Dims4(1, inputC, inputH, inputW));
+            //optProfile->setDimensions(inputName, nvinfer1::OptProfileSelector::kMIN, nvinfer1::Dims4(1, inputC, inputH, inputW));
+            optProfile->setDimensions(inputName, nvinfer1::OptProfileSelector::kMIN, nvinfer1::Dims4(1, inputC, inputH, minInputWidth));
         } else {
+        //    optProfile->setDimensions(inputName, nvinfer1::OptProfileSelector::kMIN,
+        //                              nvinfer1::Dims4(m_options.optBatchSize, inputC, inputH, inputW));
             optProfile->setDimensions(inputName, nvinfer1::OptProfileSelector::kMIN,
-                                      nvinfer1::Dims4(m_options.optBatchSize, inputC, inputH, inputW));
+                                      nvinfer1::Dims4(m_options.optBatchSize, inputC, inputH, minInputWidth));
+
         }
-        optProfile->setDimensions(inputName, nvinfer1::OptProfileSelector::kOPT,
-                                  nvinfer1::Dims4(m_options.optBatchSize, inputC, inputH, inputW));
-        optProfile->setDimensions(inputName, nvinfer1::OptProfileSelector::kMAX,
-                                  nvinfer1::Dims4(m_options.maxBatchSize, inputC, inputH, inputW));
+        if (doesSupportDynamicWidth) {
+            optProfile->setDimensions(inputName, nvinfer1::OptProfileSelector::kOPT,
+                                      nvinfer1::Dims4(m_options.optBatchSize, inputC, inputH, m_options.optInputWidth));
+            optProfile->setDimensions(inputName, nvinfer1::OptProfileSelector::kMAX,
+                                      nvinfer1::Dims4(m_options.maxBatchSize, inputC, inputH, m_options.maxInputWidth));
+        } else {
+            optProfile->setDimensions(inputName, nvinfer1::OptProfileSelector::kOPT,
+                                    nvinfer1::Dims4(m_options.optBatchSize, inputC, inputH, inputW));
+            optProfile->setDimensions(inputName, nvinfer1::OptProfileSelector::kMAX,
+                                    nvinfer1::Dims4(m_options.maxBatchSize, inputC, inputH, inputW));
+        }
+        // optProfile->setDimensions(inputName, nvinfer1::OptProfileSelector::kOPT,
+        //                           nvinfer1::Dims4(m_options.optBatchSize, inputC, inputH, inputW));
+        // optProfile->setDimensions(inputName, nvinfer1::OptProfileSelector::kMAX,
+        //                           nvinfer1::Dims4(m_options.maxBatchSize, inputC, inputH, inputW));
     }
     config->addOptimizationProfile(optProfile);
 
