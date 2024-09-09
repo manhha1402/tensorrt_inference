@@ -35,8 +35,9 @@ protected:
     bool swapBR_ = true;
 
 
-    float obj_threshold_;
-    float nms_threshold_;
+    float obj_threshold_= 0.25f;
+    float nms_threshold_ = 0.65f;
+    float seg_threshold_ = 0.5;
     int num_detect_;
 };
 }

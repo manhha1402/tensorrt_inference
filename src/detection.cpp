@@ -13,6 +13,10 @@ Detection::Detection(const std::string& model_dir,const YAML::Node &config) : Mo
     {
         nms_threshold_ = config["nms_threshold"].as<float>();
     }
+    if(config["seg_threshold"])
+    {
+        seg_threshold_ = config["seg_threshold"].as<float>();
+    }
     if(config["num_detect"])
     {
         num_detect_ = config["num_detect"].as<int>();
@@ -80,6 +84,19 @@ std::vector<Object> Detection::detectObjects(cv::cuda::GpuMat &inputImageBGR)
 
 void Detection::drawObjectLabels(cv::Mat &image, const std::vector<Object> &objects, unsigned int scale)
 {
+     // If segmentation information is present, start with that
+    if (!objects.empty() && !objects[0].box_mask.empty()) {
+        cv::Mat mask = image.clone();
+        for (const auto &object : objects) {
+            // Choose the color
+            int colorIndex = object.label % class_colors_.size(); // We have only defined 80 unique colors
+            // Add the mask for said object
+            mask(object.rect).setTo(class_colors_[colorIndex] * 255, object.box_mask);
+        }
+        // Add all the masks to our image
+        cv::addWeighted(image, 0.5, mask, 0.8, 1, image);
+    }
+    
     for (auto &object : objects) {
     int colorIndex = object.label % class_colors_.size(); 
     float meanColor = cv::mean(class_colors_[colorIndex])[0];

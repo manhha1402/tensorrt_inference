@@ -4,10 +4,6 @@
 // Runs object detection on video stream then displays annotated results.
 int main(int argc, char *argv[]) {
     const std::string home_dir = std::getenv("HOME");
-    std::filesystem::path model_path = std::filesystem::path(std::string(std::getenv("HOME"))) / "data" / "weights" / "yolov9e";
-    std::string config_file = model_path.string() + "/config.yaml";
-    YAML::Node config = YAML::LoadFile(config_file);
-    tensorrt_inference::YoloV9 yolo9(model_path.string(),config);
      // Read the input image
     std::string inputImage = argv[1];
     auto img = cv::imread(inputImage);
@@ -15,6 +11,12 @@ int main(int argc, char *argv[]) {
         std::cout << "Error: Unable to read image at path '" << inputImage << "'" << std::endl;
         return -1;
     }
+    std::string model_name = argv[2];
+    std::filesystem::path model_path = std::filesystem::path(std::string(std::getenv("HOME"))) / "data" / "weights" / model_name;
+    std::string config_file = model_path.string() + "/config.yaml";
+    YAML::Node config = YAML::LoadFile(config_file);
+    tensorrt_inference::YoloV9 yolo9(model_path.string(),config);
+   
 
     // Run inference
     const auto objects = yolo9.detectObjects(img);
