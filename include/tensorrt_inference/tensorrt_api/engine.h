@@ -70,32 +70,21 @@ public:
     ~Engine();
 
     // Build the onnx model into a TensorRT engine file, cache the model to disk
-    // (to avoid rebuilding in future), and then load the model into memory The
-    // default implementation will normalize values between [0.f, 1.f] Setting the
-    // normalize flag to false will leave values between [0.f, 255.f] (some
-    // converted models may require this). If the model requires values to be
-    // normalized between [-1.f, 1.f], use the following params:
-    //    subVals = {0.5f, 0.5f, 0.5f};
-    //    divVals = {0.5f, 0.5f, 0.5f};
-    //    normalize = true;
-    bool buildLoadNetwork(const std::string& onnx_file, const std::array<float, 3> &subVals = {0.f, 0.f, 0.f},
-                          const std::array<float, 3> &divVals = {1.f, 1.f, 1.f}, bool normalize = true) override;
+    // (to avoid rebuilding in future), and then load the model into memory. 
+    bool buildLoadNetwork(const std::string& onnx_file) override;
 
     // Load a TensorRT engine file from disk into memory
     // The default implementation will normalize values between [0.f, 1.f]
     // Setting the normalize flag to false will leave values between [0.f, 255.f]
     // (some converted models may require this). If the model requires values to
     // be normalized between [-1.f, 1.f], use the following params:
-    //    subVals = {0.5f, 0.5f, 0.5f};
-    //    divVals = {0.5f, 0.5f, 0.5f};
-    //    normalize = true;
-    bool loadNetwork(const std::string engile_file, const std::array<float, 3> &subVals = {0.f, 0.f, 0.f},
-                     const std::array<float, 3> &divVals = {1.f, 1.f, 1.f}, bool normalize = true) override;
+
+    bool loadNetwork(const std::string engile_file) override;
 
     // Run inference.
     // Input format [input][batch][cv::cuda::GpuMat]
     // Output format [batch][output][feature_vector]
-    bool runInference(const std::vector<std::vector<cv::cuda::GpuMat>> &inputs, std::vector<std::vector<std::vector<T>>> &featureVectors) override;
+    bool runInference(const cv::Mat &inputs, std::unordered_map<std::string,std::vector<T>> &feature_vectors) override;
 
     // Utility method for resizing an image while maintaining the aspect ratio by
     // adding padding to smaller dimension after scaling While letterbox padding
@@ -106,8 +95,8 @@ public:
     static cv::cuda::GpuMat resizeKeepAspectRatioPadRightBottom(const cv::cuda::GpuMat &input, size_t height, size_t width,
                                                                 const cv::Scalar &bgcolor = cv::Scalar(0, 0, 0));
 
-    [[nodiscard]] const std::vector<nvinfer1::Dims3> &getInputDims() const override { return m_inputDims; };
-    [[nodiscard]] const std::vector<nvinfer1::Dims> &getOutputDims() const override { return m_outputDims; };
+    [[nodiscard]] const std::unordered_map<std::string, NetInfo> &getInputInfo() const override { return input_map_; };
+    [[nodiscard]] const std::unordered_map<std::string, NetInfo> &getOutputInfo() const override { return output_map_; };
 
     // Utility method for transforming triple nested output array into 2D array
     // Should be used when the output batch size is 1, but there are multiple
@@ -119,12 +108,12 @@ public:
     // single output feature vector
     static void transformOutput(std::vector<std::vector<std::vector<T>>> &input, std::vector<T> &output);
     // Convert NHWC to NCHW and apply scaling and mean subtraction
-    static cv::cuda::GpuMat blobFromGpuMats(const std::vector<cv::cuda::GpuMat> &batchInput, const std::array<float, 3> &subVals,
-                                            const std::array<float, 3> &divVals, bool normalize, bool swapRB = false);
+    //static cv::cuda::GpuMat blobFromGpuMats(const std::vector<cv::cuda::GpuMat> &batchInput, const std::array<float, 3> &subVals,
+    //                                        const std::array<float, 3> &divVals, bool normalize, bool swapRB = false);
 
 private:
     // Build the network
-    bool build(const std::string& onnxModelPath, const std::array<float, 3> &subVals, const std::array<float, 3> &divVals, bool normalize);
+    bool build(const std::string& onnxModelPath);
 
     // Converts the engine options into a string
     std::string serializeEngineOptions(const Options &options, const std::string &onnxModelPath);
@@ -133,18 +122,15 @@ private:
 
     void clearGpuBuffers();
 
-    // Normalization, scaling, and mean subtraction of inputs
-    std::array<float, 3> m_subVals{};
-    std::array<float, 3> m_divVals{};
-    bool m_normalize;
-
+  
     // Holds pointers to the input and output GPU buffers
-    std::vector<void *> m_buffers;
-    std::vector<uint32_t> m_outputLengths{};
-    std::vector<nvinfer1::Dims3> m_inputDims;
-    std::vector<nvinfer1::Dims> m_outputDims;
-    std::vector<std::string> m_IOTensorNames;
-    int32_t m_inputBatchSize;
+    // std::vector<void *> m_buffers;
+    // std::vector<nvinfer1::Dims> m_inputDims;
+    // std::vector<nvinfer1::Dims> m_outputDims;
+    // std::vector<std::string> output_tensor_names_;
+    // std::vector<std::string> input_tensor_names_;
+    std::unordered_map<std::string, NetInfo> input_map_;
+    std::unordered_map<std::string, NetInfo> output_map_;
 
     // Must keep IRuntime around for inference, see:
     // https://forums.developer.nvidia.com/t/is-it-safe-to-deallocate-nvinfer1-iruntime-after-creating-an-nvinfer1-icudaengine-but-before-running-inference-with-said-icudaengine/255381/2?u=cyruspk4w6
@@ -154,6 +140,7 @@ private:
     std::unique_ptr<nvinfer1::IExecutionContext> m_context = nullptr;
     const Options m_options;
     Logger m_logger;
+
 };
 
 template <typename T> Engine<T>::Engine(const Options &options) : m_options(options) {}

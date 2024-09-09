@@ -87,57 +87,64 @@ template <typename T> std::string Engine<T>::serializeEngineOptions(const Option
     return engineName;
 }
 
-template <typename T>
-cv::cuda::GpuMat Engine<T>::blobFromGpuMats(const std::vector<cv::cuda::GpuMat> &batchInput, const std::array<float, 3> &subVals,
-                                            const std::array<float, 3> &divVals, bool normalize, bool swapRB) {
+// template <typename T>
+// cv::cuda::GpuMat Engine<T>::blobFromGpuMats(const std::vector<cv::cuda::GpuMat> &batchInput, const std::array<float, 3> &subVals,
+//                                             const std::array<float, 3> &divVals, bool normalize, bool swapRB) {
    
-    CHECK(!batchInput.empty())
-    CHECK(batchInput[0].channels() == 3)
+//     CHECK(!batchInput.empty())
+//     CHECK(batchInput[0].channels() == 3)
     
-    cv::cuda::GpuMat gpu_dst(1, batchInput[0].rows * batchInput[0].cols * batchInput.size(), CV_8UC3);
+//     cv::cuda::GpuMat gpu_dst(1, batchInput[0].rows * batchInput[0].cols * batchInput.size(), CV_8UC3);
 
-    size_t width = batchInput[0].cols * batchInput[0].rows;
-    if (swapRB) {
-        for (size_t img = 0; img < batchInput.size(); ++img) {
-            std::vector<cv::cuda::GpuMat> input_channels{
-                cv::cuda::GpuMat(batchInput[0].rows, batchInput[0].cols, CV_8U, &(gpu_dst.ptr()[width * 2 + width * 3 * img])),
-                cv::cuda::GpuMat(batchInput[0].rows, batchInput[0].cols, CV_8U, &(gpu_dst.ptr()[width + width * 3 * img])),
-                cv::cuda::GpuMat(batchInput[0].rows, batchInput[0].cols, CV_8U, &(gpu_dst.ptr()[0 + width * 3 * img]))};
-            cv::cuda::split(batchInput[img], input_channels); // HWC -> CHW
-        }
-    } else {
-        for (size_t img = 0; img < batchInput.size(); ++img) {
-            std::vector<cv::cuda::GpuMat> input_channels{
-                cv::cuda::GpuMat(batchInput[0].rows, batchInput[0].cols, CV_8U, &(gpu_dst.ptr()[0 + width * 3 * img])),
-                cv::cuda::GpuMat(batchInput[0].rows, batchInput[0].cols, CV_8U, &(gpu_dst.ptr()[width + width * 3 * img])),
-                cv::cuda::GpuMat(batchInput[0].rows, batchInput[0].cols, CV_8U, &(gpu_dst.ptr()[width * 2 + width * 3 * img]))};
-            cv::cuda::split(batchInput[img], input_channels); // HWC -> CHW
-        }
-    }
-    cv::cuda::GpuMat mfloat;
-    if (normalize) {
-        // [0.f, 1.f]
-        gpu_dst.convertTo(mfloat, CV_32FC3, 1.f / 255.f);
-    } else {
-        // [0.f, 255.f]
-        gpu_dst.convertTo(mfloat, CV_32FC3);
-    }
+//     size_t width = batchInput[0].cols * batchInput[0].rows;
+//     if (swapRB) {
+//         for (size_t img = 0; img < batchInput.size(); ++img) {
+//             std::vector<cv::cuda::GpuMat> input_channels{
+//                 cv::cuda::GpuMat(batchInput[0].rows, batchInput[0].cols, CV_8U, &(gpu_dst.ptr()[width * 2 + width * 3 * img])),
+//                 cv::cuda::GpuMat(batchInput[0].rows, batchInput[0].cols, CV_8U, &(gpu_dst.ptr()[width + width * 3 * img])),
+//                 cv::cuda::GpuMat(batchInput[0].rows, batchInput[0].cols, CV_8U, &(gpu_dst.ptr()[0 + width * 3 * img]))};
+//             cv::cuda::split(batchInput[img], input_channels); // HWC -> CHW
+//         }
+//     } else {
+//         for (size_t img = 0; img < batchInput.size(); ++img) {
+//             std::vector<cv::cuda::GpuMat> input_channels{
+//                 cv::cuda::GpuMat(batchInput[0].rows, batchInput[0].cols, CV_8U, &(gpu_dst.ptr()[0 + width * 3 * img])),
+//                 cv::cuda::GpuMat(batchInput[0].rows, batchInput[0].cols, CV_8U, &(gpu_dst.ptr()[width + width * 3 * img])),
+//                 cv::cuda::GpuMat(batchInput[0].rows, batchInput[0].cols, CV_8U, &(gpu_dst.ptr()[width * 2 + width * 3 * img]))};
+//             cv::cuda::split(batchInput[img], input_channels); // HWC -> CHW
+//         }
+//     }
+//     cv::cuda::GpuMat mfloat;
+//     if (normalize) {
+//         // [0.f, 1.f]
+//         gpu_dst.convertTo(mfloat, CV_32FC3, 1.f / 255.f);
+//     } else {
+//         // [0.f, 255.f]
+//         gpu_dst.convertTo(mfloat, CV_32FC3);
+//     }
 
-    // Apply scaling and mean subtraction
-    cv::cuda::subtract(mfloat, cv::Scalar(subVals[0], subVals[1], subVals[2]), mfloat, cv::noArray(), -1);
-    cv::cuda::divide(mfloat, cv::Scalar(divVals[0], divVals[1], divVals[2]), mfloat, 1, -1);
+//     // Apply scaling and mean subtraction
+//     cv::cuda::subtract(mfloat, cv::Scalar(subVals[0], subVals[1], subVals[2]), mfloat, cv::noArray(), -1);
+//     cv::cuda::divide(mfloat, cv::Scalar(divVals[0], divVals[1], divVals[2]), mfloat, 1, -1);
 
-    return mfloat;
-}
+//     return mfloat;
+// }
+
 
 template <typename T> void Engine<T>::clearGpuBuffers() {
-    if (!m_buffers.empty()) {
-        // Free GPU memory of outputs
-        const auto numInputs = m_inputDims.size();
-        for (int32_t outputBinding = numInputs; outputBinding < m_engine->getNbIOTensors(); ++outputBinding) {
-            Util::checkCudaErrorCode(cudaFree(m_buffers[outputBinding]));
+    if (!input_map_.empty()) {
+        // Free GPU memory of inputs
+        for (auto it = input_map_.begin(); it != input_map_.end(); ++it) {
+            Util::checkCudaErrorCode(cudaFree(it->second.buffer));
         }
-        m_buffers.clear();
+        input_map_.clear();
+    }
+    if (!output_map_.empty()) {
+        // Free GPU memory of inputs
+        for (auto it = output_map_.begin(); it != output_map_.end(); ++it) {
+            Util::checkCudaErrorCode(cudaFree(it->second.buffer));
+        }
+        output_map_.clear();
     }
 }
 }

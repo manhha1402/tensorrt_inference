@@ -27,15 +27,6 @@ int main(int argc, char *argv[]) {
 
     }
     cv::imwrite("result.jpg",img);
-    // // Draw the bounding boxes on the image
-    // yolo9.drawObjectLabels(img, objects);
 
-    // std::cout << "Detected " << objects.size() << " objects" << std::endl;
-
-    // // Save the image to disk
-    // const auto outputName = inputImage.substr(0, inputImage.find_last_of('.')) + "_annotated.jpg";
-    // cv::imwrite(outputName, img);
-    // std::cout << "Saved annotated image to: " << outputName << std::endl;
-
-    // return 0;
+    return 0;
 }

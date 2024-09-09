@@ -6,17 +6,21 @@
 #include "NvInfer.h" // Include for nvinfer1::Dims and nvinfer1::Dims3
 namespace tensorrt_inference
 {
+struct NetInfo
+{
+    void * buffer;
+    nvinfer1::Dims dims;
+    size_t tensor_length = 0;
+};
+
 template <typename T>
 class IEngine {
 public:
     virtual ~IEngine() = default;
-    virtual bool buildLoadNetwork(const std::string& onnx_file, const std::array<float, 3> &subVals = {0.f, 0.f, 0.f},
-                                  const std::array<float, 3> &divVals = {1.f, 1.f, 1.f}, bool normalize = true) = 0;
-    virtual bool loadNetwork(std::string trtModelPath, const std::array<float, 3> &subVals = {0.f, 0.f, 0.f},
-                             const std::array<float, 3> &divVals = {1.f, 1.f, 1.f}, bool normalize = true) = 0;
-    virtual bool runInference(const std::vector<std::vector<cv::cuda::GpuMat>> &inputs, 
-                              std::vector<std::vector<std::vector<T>>> &featureVectors) = 0;
-    virtual const std::vector<nvinfer1::Dims3> &getInputDims() const = 0;
-    virtual const std::vector<nvinfer1::Dims> &getOutputDims() const = 0;
+    virtual bool buildLoadNetwork(const std::string& onnx_file) = 0;
+    virtual bool loadNetwork(std::string trtModelPath) = 0;
+    virtual bool runInference(const cv::Mat &input,std::unordered_map<std::string,std::vector<T>> &featureVectors) = 0;
+    virtual const std::unordered_map<std::string, NetInfo> &getInputInfo() const = 0;
+    virtual const std::unordered_map<std::string, NetInfo> &getOutputInfo() const = 0;
 };
 }

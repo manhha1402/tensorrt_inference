@@ -12,23 +12,31 @@ class Model
 public:
     explicit Model(const std::string& model_dir,const YAML::Node &config);
     ~Model();
-    bool doInference(const cv::cuda::GpuMat &gpuImg,  std::vector<std::vector<std::vector<float>>>& feature_vectors); 
+    bool doInference(const cv::cuda::GpuMat &gpuImg,  std::unordered_map<std::string, std::vector<float>>& feature_vectors); 
 
 protected:
     std::unique_ptr<Engine<float>> m_trtEngine = nullptr;
-    // Preprocess the input
-    std::vector<std::vector<cv::cuda::GpuMat>> preprocess(const cv::cuda::GpuMat &gpuImg);
+    // Preprocess the input. Normalize values between [0.f, 1.f] Setting the
+    // normalize flag to false will leave values between [0.f, 255.f] (some
+    // converted models may require this). If the model requires values to be
+    // normalized between [-1.f, 1.f], use the following params:
+    //    subVals = {0.0f, 0.0f, 0.0f};
+    //    divVals = {1.f, 1.f, 1.f};
+    //    normalize = false;
+    cv::Mat preprocess(const cv::cuda::GpuMat &gpuImg);
     std::string onnx_file_;
 
-    //const std::array<float, 3> SUB_VALS{0.f, 0.f, 0.f};
-    //const std::array<float, 3> DIV_VALS{1.f, 1.f, 1.f};
+    float m_ratio = 1.0;
+    float input_frame_h_ = 0;
+    float input_frame_w_ = 0;
+    std::vector<float> sub_vals_{0,0,0};
+    std::vector<float> div_vals_{1.0f, 1.0f, 1.0f};
+    bool normalized_ = false;
+    bool swapBR_ = true;
 
-    const std::array<float, 3> SUB_VALS{104.0f, 117.0f, 123.0f};
-    const std::array<float, 3> DIV_VALS{1.f, 1.f, 1.f};
-    const bool NORMALIZE = false;
 
-    float m_ratio = 1;
-    float m_imgWidth = 0;
-    float m_imgHeight = 0;
+    float obj_threshold_;
+    float nms_threshold_;
+    int num_detect_;
 };
 }

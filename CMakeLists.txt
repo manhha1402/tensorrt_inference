@@ -49,7 +49,6 @@ add_library(${PROJECT_NAME}_lib SHARED
                 src/yolov8.cpp
                 src/yolov9.cpp
                 src/retinaface.cpp
-                src/yolo9_refactor.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC 
@@ -72,21 +71,21 @@ target_include_directories(
 
 
 # Build and link the executables
-add_executable(yolo9_refactor_test nodes/yolo9_refactor_test.cpp)
-target_link_libraries(yolo9_refactor_test ${PROJECT_NAME}_lib)
+add_executable(yolov9_test nodes/yolov9_test.cpp)
+target_link_libraries(yolov9_test ${PROJECT_NAME}_lib)
 
 # Build and link the executables
-add_executable(object_detection_image_yolo8 nodes/object_detection_image_yolo8.cpp)
-target_link_libraries(object_detection_image_yolo8 ${PROJECT_NAME}_lib)
+add_executable(yolov8_test nodes/yolov8_test.cpp)
+target_link_libraries(yolov8_test ${PROJECT_NAME}_lib)
 
 
-add_executable(object_detection_image nodes/object_detection_image.cpp)
-target_link_libraries(object_detection_image ${PROJECT_NAME}_lib)
+# add_executable(object_detection_image nodes/object_detection_image.cpp)
+# target_link_libraries(object_detection_image ${PROJECT_NAME}_lib)
 
-add_executable(object_detection_video_stream_yolov8 nodes/object_detection_video_stream_yolov8.cpp)
-target_link_libraries(object_detection_video_stream_yolov8 ${PROJECT_NAME}_lib)
+# add_executable(object_detection_video_stream_yolov8 nodes/object_detection_video_stream_yolov8.cpp)
+# target_link_libraries(object_detection_video_stream_yolov8 ${PROJECT_NAME}_lib)
 
-# arcface
+# retinaface
 
 add_executable(retina_test nodes/retina_test.cpp)
 target_link_libraries(retina_test ${PROJECT_NAME}_lib)
@@ -105,10 +104,10 @@ install(
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
 )
 
-install(
-  TARGETS object_detection_image object_detection_image_yolo8 yolo9_refactor_test object_detection_video_stream_yolov8
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
-)
+# install(
+#   TARGETS object_detection_image object_detection_image_yolo8 yolo9_refactor_test object_detection_video_stream_yolov8
+#   DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
+# )
 
 install(
     DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/

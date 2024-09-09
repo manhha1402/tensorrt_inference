@@ -4,28 +4,36 @@
 namespace tensorrt_inference
 {
 Detection::Detection(const std::string& model_dir,const YAML::Node &config) : Model(model_dir,config) {
-    std::string labels_file = model_dir + "/" + config["labels_file"].as<std::string>();
-    obj_threshold_ = config["obj_threshold"].as<float>();
-    nms_threshold_ = config["nms_threshold"].as<float>();
-    agnostic_ = config["agnostic"].as<bool>();
-    strides_ = config["strides"].as<std::vector<int>>();
-    num_anchors_ = config["num_anchors"].as<std::vector<int>>();
-    int index = 0;
-    const auto &inputDims = m_trtEngine->getInputDims();
-
-    for (const int &stride : strides_)
+    
+    if(config["obj_threshold"])
     {
-        int num_anchor = num_anchors_[index] !=0 ? num_anchors_[index] : 1;
-        num_rows_ += int(inputDims[0].d[1] / stride) * int(inputDims[0].d[2] / stride) * num_anchor;
-        index+=1;
+        obj_threshold_ = config["obj_threshold"].as<float>();
     }
-    std::cout<<"chanels: "<<inputDims[0].d[0]<<std::endl;
-    std::cout<<"height: "<<inputDims[0].d[1]<<std::endl;
-    std::cout<<"width: "<<inputDims[0].d[2]<<std::endl;
-    std::cout<<"num_rows: "<<num_rows_<<std::endl;
-    std::cout<<"strides: "<<strides_.size()<<std::endl;
-    std::cout<<"num_anchors: "<<num_anchors_.size()<<std::endl;
-
+    if(config["nms_threshold"])
+    {
+        nms_threshold_ = config["nms_threshold"].as<float>();
+    }
+    if(config["num_detect"])
+    {
+        num_detect_ = config["num_detect"].as<int>();
+    }
+    if(config["normalized"])
+    {
+        normalized_ = config["normalized"].as<bool>();
+    }
+     if(config["swapBR"])
+    {
+        swapBR_ = config["swapBR"].as<bool>();
+    }
+    if(config["sub_vals"])
+    {
+       sub_vals_ = config["sub_vals"].as<std::vector<float>>();
+    }
+    if(config["div_vals"])
+    {
+        div_vals_ = config["div_vals"].as<std::vector<float>>();
+    }
+    std::string labels_file = model_dir + "/" + config["labels_file"].as<std::string>();
     if (Util::doesFileExist(std::filesystem::path(labels_file)))
     {
         class_labels_ = readClassLabel(labels_file);
@@ -38,6 +46,17 @@ Detection::Detection(const std::string& model_dir,const YAML::Node &config) : Mo
     srand((int) time(nullptr));
     for (cv::Scalar &class_color : class_colors_)
         class_color = cv::Scalar(rand() % 255, rand() % 255, rand() % 255);
+
+
+    std::cout<<"obj_threshold: "<<obj_threshold_<<std::endl;
+    std::cout<<"nms_threshold: "<<nms_threshold_<<std::endl;
+    std::cout<<"num_detect: "<<num_detect_<<std::endl;
+
+    std::cout<<"sub_vals: "<<sub_vals_[0]<<" "<<sub_vals_[1]<<" "<<sub_vals_[2]<<std::endl;
+    std::cout<<"div_vals: "<<div_vals_[0]<<" "<<div_vals_[1]<<" "<<div_vals_[2]<<std::endl;
+    std::cout<<"normalized: "<<normalized_<<std::endl;
+    std::cout<<"swapBR: "<<swapBR_<<std::endl;
+
 }
 
 std::vector<Object> Detection::detectObjects(const cv::Mat &inputImageBGR)
@@ -51,22 +70,10 @@ std::vector<Object> Detection::detectObjects(const cv::Mat &inputImageBGR)
 
 std::vector<Object> Detection::detectObjects(const cv::cuda::GpuMat &inputImageBGR)
 {
-    std::vector<std::vector<std::vector<float>>> feature_vectors;
+    std::unordered_map<std::string, std::vector<float>> feature_vectors;
     doInference(inputImageBGR,feature_vectors);
     // Check if our model does only object detection or also supports segmentation
-    std::vector<Object> ret;
-    const auto &numOutputs = m_trtEngine->getOutputDims().size();
-    if (numOutputs == 1) {
-        // Object detection or pose estimation
-        // Since we have a batch size of 1 and only 1 output, we must convert the output from a 3D array to a 1D array.
-        std::vector<float> feature_vector;
-        Engine<float>::transformOutput(feature_vectors, feature_vector);
-        // Object detection
-        ret = postprocessDetect(feature_vector);
-    } else {
-        throw std::runtime_error("Incorrect number of outputs!");
-    }
-
+    std::vector<Object> ret= postprocessDetect(feature_vectors);
     return ret;
 }
 

@@ -19,15 +19,10 @@ public:
     std::vector<Object> detectObjects(const cv::cuda::GpuMat &inputImageBGR);
     void drawObjectLabels(cv::Mat &image, const std::vector<Object> &objects, unsigned int scale = 2);
 protected:
-    virtual std::vector<Object> postprocessDetect(std::vector<float> &feature_vector) = 0;
+    virtual std::vector<Object> postprocessDetect(std::unordered_map<std::string, std::vector<float>> &feature_vector) = 0;
     std::map<int, std::string> class_labels_;
     int CATEGORY;
-    float obj_threshold_;
-    float nms_threshold_;
     bool agnostic_;
     std::vector<cv::Scalar> class_colors_;
-    std::vector<int> strides_;
-    std::vector<int> num_anchors_;
-    int num_rows_ = 0;
 };
 }

@@ -1,4 +1,4 @@
-#include "tensorrt_inference/yolo9_refactor.h"
+#include "tensorrt_inference/yolov8.h"
 #include <opencv2/cudaimgproc.hpp>
 #include <yaml-cpp/yaml.h>
 // Runs object detection on video stream then displays annotated results.
@@ -7,7 +7,7 @@ int main(int argc, char *argv[]) {
     std::filesystem::path model_path = std::filesystem::path(std::string(std::getenv("HOME"))) / "data" / "weights" / "yolov9e";
     std::string config_file = model_path.string() + "/config.yaml";
     YAML::Node config = YAML::LoadFile(config_file);
-    tensorrt_inference::YoloV9Refactor yolo9(model_path.string(),config);
+    tensorrt_inference::YoloV8 yolo8(model_path.string(),config);
      // Read the input image
     std::string inputImage = argv[1];
     auto img = cv::imread(inputImage);
@@ -17,10 +17,10 @@ int main(int argc, char *argv[]) {
     }
 
     // Run inference
-    const auto objects = yolo9.detectObjects(img);
+    const auto objects = yolo8.detectObjects(img);
 
     // Draw the bounding boxes on the image
-    yolo9.drawObjectLabels(img, objects);
+    yolo8.drawObjectLabels(img, objects);
 
     std::cout << "Detected " << objects.size() << " objects" << std::endl;
 

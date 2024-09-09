@@ -31,7 +31,7 @@ struct KeyPoint{
 struct FaceBox{
     // The object bounding box rectangle.
     cv::Rect_<float> rect;
-    std::vector<KeyPoint> key_points;
+    std::vector<KeyPoint> landmarks;
     bool has_mask = false;
     float score = 0;
 };
