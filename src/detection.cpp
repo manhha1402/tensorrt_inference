@@ -68,12 +68,13 @@ std::vector<Object> Detection::detectObjects(const cv::Mat &inputImageBGR)
     return detectObjects(gpuImg);
 }
 
-std::vector<Object> Detection::detectObjects(const cv::cuda::GpuMat &inputImageBGR)
+std::vector<Object> Detection::detectObjects(cv::cuda::GpuMat &inputImageBGR)
 {
     std::unordered_map<std::string, std::vector<float>> feature_vectors;
     doInference(inputImageBGR,feature_vectors);
+    inputImageBGR.release();
     // Check if our model does only object detection or also supports segmentation
-    std::vector<Object> ret= postprocessDetect(feature_vectors);
+    std::vector<Object> ret= postprocess(feature_vectors);
     return ret;
 }
 

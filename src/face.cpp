@@ -53,10 +53,11 @@ std::vector<FaceBox> Face::detectFaces(const cv::Mat &inputImageBGR)
     // Call detectObjects with the GPU image
     return detectFaces(gpuImg);
 }
-std::vector<FaceBox> Face::detectFaces(const cv::cuda::GpuMat &inputImageBGR)
+std::vector<FaceBox> Face::detectFaces(cv::cuda::GpuMat &inputImageBGR)
 {
     std::unordered_map<std::string, std::vector<float>> feature_vectors;
     doInference(inputImageBGR,feature_vectors);
+    inputImageBGR.release();
     // Check if our model does only object detection or also supports segmentation
     std::vector<FaceBox> ret = postProcess(feature_vectors);
     return ret;

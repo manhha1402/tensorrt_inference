@@ -84,7 +84,7 @@ public:
     // Run inference.
     // Input format [input][batch][cv::cuda::GpuMat]
     // Output format [batch][output][feature_vector]
-    bool runInference(const cv::Mat &inputs, std::unordered_map<std::string,std::vector<T>> &feature_vectors) override;
+    bool runInference(const cv::cuda::GpuMat &inputs, std::unordered_map<std::string,std::vector<T>> &feature_vectors) override;
 
     // Utility method for resizing an image while maintaining the aspect ratio by
     // adding padding to smaller dimension after scaling While letterbox padding

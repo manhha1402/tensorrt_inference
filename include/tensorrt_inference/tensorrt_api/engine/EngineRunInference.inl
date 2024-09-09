@@ -5,7 +5,7 @@
 namespace tensorrt_inference
 {
 template <typename T>
-bool Engine<T>::runInference(const cv::Mat &inputs, std::unordered_map<std::string,std::vector<T>> &feature_vectors) {
+bool Engine<T>::runInference(const cv::cuda::GpuMat &inputs, std::unordered_map<std::string,std::vector<T>> &feature_vectors) {
     // First we do some error checking
     if (inputs.empty()) {
         spdlog::error("Provided input vector is empty!");
@@ -19,7 +19,7 @@ bool Engine<T>::runInference(const cv::Mat &inputs, std::unordered_map<std::stri
     for (auto it = input_map_.begin(); it !=input_map_.end(); ++ it) {
         Util::checkCudaErrorCode(cudaMemcpyAsync(it->second.buffer, (T *)inputs.ptr<T>(0),
                                     it->second.tensor_length * sizeof(T),
-                                    cudaMemcpyHostToDevice, inferenceCudaStream));
+                                    cudaMemcpyDeviceToDevice, inferenceCudaStream));
     }
     // Ensure all dynamic bindings have been defined.
     if (!m_context->allInputDimensionsSpecified()) {

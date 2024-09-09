@@ -12,7 +12,7 @@ class Model
 public:
     explicit Model(const std::string& model_dir,const YAML::Node &config);
     ~Model();
-    bool doInference(const cv::cuda::GpuMat &gpuImg,  std::unordered_map<std::string, std::vector<float>>& feature_vectors); 
+    bool doInference(cv::cuda::GpuMat &gpuImg,  std::unordered_map<std::string, std::vector<float>>& feature_vectors); 
 
 protected:
     std::unique_ptr<Engine<float>> m_trtEngine = nullptr;
@@ -23,7 +23,7 @@ protected:
     //    subVals = {0.0f, 0.0f, 0.0f};
     //    divVals = {1.f, 1.f, 1.f};
     //    normalize = false;
-    cv::Mat preprocess(const cv::cuda::GpuMat &gpuImg);
+    cv::cuda::GpuMat preprocess(const cv::cuda::GpuMat &gpuImg);
     std::string onnx_file_;
 
     float m_ratio = 1.0;

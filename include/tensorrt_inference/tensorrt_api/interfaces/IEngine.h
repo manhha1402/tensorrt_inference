@@ -19,7 +19,7 @@ public:
     virtual ~IEngine() = default;
     virtual bool buildLoadNetwork(const std::string& onnx_file) = 0;
     virtual bool loadNetwork(std::string trtModelPath) = 0;
-    virtual bool runInference(const cv::Mat &input,std::unordered_map<std::string,std::vector<T>> &featureVectors) = 0;
+    virtual bool runInference(const cv::cuda::GpuMat &input,std::unordered_map<std::string,std::vector<T>> &featureVectors) = 0;
     virtual const std::unordered_map<std::string, NetInfo> &getInputInfo() const = 0;
     virtual const std::unordered_map<std::string, NetInfo> &getOutputInfo() const = 0;
 };

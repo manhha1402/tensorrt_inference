@@ -4,7 +4,7 @@ namespace tensorrt_inference
 YoloV8::YoloV8(const std::string& model_dir,const YAML::Node &config) : 
 Detection(model_dir,config)
 {}
-std::vector<Object> YoloV8::postprocessDetect(std::unordered_map<std::string, std::vector<float>> &feature_vector)
+std::vector<Object> YoloV8::postprocess(std::unordered_map<std::string, std::vector<float>> &feature_vector)
 {
     auto numAnchors = m_trtEngine->getOutputInfo().at("output0").dims.d[2];
     std::vector<cv::Rect> bboxes;

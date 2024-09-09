@@ -4,20 +4,41 @@ namespace tensorrt_inference
 YoloV9::YoloV9(const std::string& model_dir,const YAML::Node &config) : 
 Detection(model_dir,config)
 {}
-std::vector<Object> YoloV9::postprocessDetect(std::unordered_map<std::string, std::vector<float>> &feature_vector)
+std::vector<Object> YoloV9::postprocess(std::unordered_map<std::string, std::vector<float>> &feature_vector)
 {
-    auto numAnchors = m_trtEngine->getOutputInfo().at("output0").dims.d[2];
+    
+    if(m_trtEngine->getOutputInfo().size () == 1)
+    {
+        return postprocessDetect(feature_vector);
+    }
+    else if (m_trtEngine->getOutputInfo().size () == 2)
+    {
+        return postProcessSegmentation(feature_vector);
+    }
+    else{
+
+        return std::vector<Object>();
+    }
+ 
+}
+
+    // Postprocess the output
+std::vector<Object> YoloV9::postprocessDetect(std::unordered_map<std::string, std::vector<float>> &feature_vector)
+{ 
+    int num_anchors;
+    num_anchors = m_trtEngine->getOutputInfo().at("output0").dims.d[2];
+
     std::vector<cv::Rect> bboxes;
     std::vector<float> scores;
     std::vector<int> labels;
     std::vector<int> indices;
-    cv::Mat res_mat = cv::Mat(CATEGORY + 4, numAnchors, CV_32F, feature_vector["output0"].data());
+    cv::Mat res_mat = cv::Mat(CATEGORY + 4, num_anchors, CV_32F, feature_vector["output0"].data());
     res_mat = res_mat.t();
     cv::Mat prob_mat;
     cv::reduce(res_mat.colRange(4, CATEGORY + 4), prob_mat, 1, cv::REDUCE_MAX);
     float *out = res_mat.ptr<float>(0);
     // Get all the YOLO proposals
-    for (int i = 0; i < numAnchors; i++) {
+    for (int i = 0; i < num_anchors; i++) {
         float *row = out + i * (CATEGORY + 4);
         float prob = *prob_mat.ptr<float>(i);
         if (prob < obj_threshold_)
@@ -61,7 +82,14 @@ std::vector<Object> YoloV9::postprocessDetect(std::unordered_map<std::string, st
 
         cnt += 1;
     }
-
     return objects;
 }
+
+    // Postprocess the output for segmentation model
+std::vector<Object> YoloV9::postProcessSegmentation(std::unordered_map<std::string, std::vector<float>> &feature_vector)
+{
+
+}
+
+
 }

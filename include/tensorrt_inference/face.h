@@ -22,7 +22,7 @@ public:
     explicit Face(const std::string& model_dir,const YAML::Node &config);
    // Detect the objects in the image
     std::vector<FaceBox> detectFaces(const cv::Mat &inputImageBGR);
-    std::vector<FaceBox> detectFaces(const cv::cuda::GpuMat &inputImageBGR);
+    std::vector<FaceBox> detectFaces(cv::cuda::GpuMat &inputImageBGR);
 
     void drawFaceLabels(cv::Mat &image, const std::vector<FaceBox> &faces, unsigned int scale = 2);
 

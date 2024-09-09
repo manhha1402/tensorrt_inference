@@ -33,7 +33,7 @@ Model::~Model()
 {
 }
 
-cv::Mat Model::preprocess(const cv::cuda::GpuMat &gpuImg)
+cv::cuda::GpuMat Model::preprocess(const cv::cuda::GpuMat &gpuImg)
 {
     // Populate the input vectors
     const auto & input_info = m_trtEngine->getInputInfo().begin();
@@ -75,40 +75,18 @@ cv::Mat Model::preprocess(const cv::cuda::GpuMat &gpuImg)
         // [0.f, 255.f]
         gpu_dst.convertTo(mfloat, CV_32FC3);
     }
-
+    
     // Apply scaling and mean subtraction
     cv::cuda::subtract(mfloat, cv::Scalar(sub_vals_[0], sub_vals_[1], sub_vals_[2]), mfloat, cv::noArray(), -1);
     cv::cuda::divide(mfloat, cv::Scalar(div_vals_[0], div_vals_[1], div_vals_[2]), mfloat, 1, -1);
-    
-    
-    cv::Mat cv_input;
-    mfloat.download(cv_input);
-    /*
-    resized.convertTo(resized, CV_32FC3);
-    cv::cuda::subtract(resized, cv::Scalar(sub_vals_[0],sub_vals_[1],sub_vals_[2]), resized, cv::noArray(), -1);
-    cv::cuda::divide(resized, cv::Scalar(div_vals_[0],div_vals_[1],div_vals_[2]), resized, 1, -1);
-    
-    std::vector<cv::cuda::GpuMat> temp;
-    cv::cuda::split(resized, temp);
-    cv::Mat cv_input;
-    for (int i = 0; i < temp.size(); i++)
-    {
-        cv::Mat cpu_img;
-        temp[i].download(cpu_img);
-        cv_input.push_back(cpu_img);
-    }
-    if(normalized_)
-    {
-        cv_input.convertTo(cv_input, CV_32F, 1.f / 255.f);
-    }
-    */
-    return cv_input;
+    return mfloat;
+   
 }
  
-bool Model::doInference(const cv::cuda::GpuMat &gpuImg,  std::unordered_map<std::string, std::vector<float>>& feature_vectors)
+bool Model::doInference(cv::cuda::GpuMat &gpuImg,  std::unordered_map<std::string, std::vector<float>>& feature_vectors)
 {
-    const auto input = preprocess(gpuImg);
-    auto succ = m_trtEngine->runInference(input, feature_vectors);
+    auto gpu_input = preprocess(gpuImg);
+    auto succ = m_trtEngine->runInference(gpu_input, feature_vectors);
     if (!succ) {
         std::string msg = "Error: Unable to run inference.";
         spdlog::error(msg);

@@ -16,10 +16,10 @@ public:
 
    // Detect the objects in the image
     std::vector<Object> detectObjects(const cv::Mat &inputImageBGR);
-    std::vector<Object> detectObjects(const cv::cuda::GpuMat &inputImageBGR);
+    std::vector<Object> detectObjects(cv::cuda::GpuMat &inputImageBGR);
     void drawObjectLabels(cv::Mat &image, const std::vector<Object> &objects, unsigned int scale = 2);
 protected:
-    virtual std::vector<Object> postprocessDetect(std::unordered_map<std::string, std::vector<float>> &feature_vector) = 0;
+    virtual std::vector<Object> postprocess(std::unordered_map<std::string, std::vector<float>> &feature_vector) = 0;
     std::map<int, std::string> class_labels_;
     int CATEGORY;
     bool agnostic_;
