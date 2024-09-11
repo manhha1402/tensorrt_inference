@@ -5,19 +5,16 @@ namespace tensorrt_inference
 {
 Detection::Detection(const std::string& model_dir,const YAML::Node &config) : Model(model_dir,config) {
     
-    
-   
-    if(config["num_kps"])
+    if(config["labels_file"])
     {
-        num_kps_ = config["num_kps"].as<int>();
-    }
-    std::string labels_file = model_dir + "/" + config["labels_file"].as<std::string>();
-    if (Util::doesFileExist(std::filesystem::path(labels_file)))
-    {
-        class_labels_ = readClassLabel(labels_file);
-    }
-    else {
-        spdlog::error("label file is not existed!");
+        std::string labels_file = model_dir + "/" + config["labels_file"].as<std::string>();
+        if (Util::doesFileExist(std::filesystem::path(labels_file)))
+        {
+            class_labels_ = readClassLabel(labels_file);
+        }
+        else {
+            spdlog::error("label file is not existed!");
+        }
     }
     CATEGORY = class_labels_.size();
     class_colors_.resize(CATEGORY);
@@ -28,19 +25,20 @@ Detection::Detection(const std::string& model_dir,const YAML::Node &config) : Mo
     std::cout<<"div_vals: "<<div_vals_[0]<<" "<<div_vals_[1]<<" "<<div_vals_[2]<<std::endl;
     std::cout<<"normalized: "<<normalized_<<std::endl;
     std::cout<<"swapBR: "<<swapBR_<<std::endl;
+    std::cout<<"num_kps: "<<num_kps_<<std::endl;
 
 }
 
-std::vector<Object> Detection::detectObjects(const cv::Mat &inputImageBGR, const DetectionParams& params)
+std::vector<Object> Detection::detect(const cv::Mat &inputImageBGR, const DetectionParams& params)
 {
  // Upload the image to GPU memory
     cv::cuda::GpuMat gpuImg;
     gpuImg.upload(inputImageBGR);
     // Call detectObjects with the GPU image
-    return detectObjects(gpuImg,params);
+    return detect(gpuImg,params);
 }
 
-std::vector<Object> Detection::detectObjects(cv::cuda::GpuMat &inputImageBGR, const DetectionParams& params)
+std::vector<Object> Detection::detect(cv::cuda::GpuMat &inputImageBGR, const DetectionParams& params)
 {
     std::unordered_map<std::string, std::vector<float>> feature_vectors;
     doInference(inputImageBGR,feature_vectors);
@@ -141,7 +139,6 @@ void Detection::drawObjectLabels(cv::Mat &image, const std::vector<Object> &obje
         // Add all the masks to our image
         cv::addWeighted(image, 0.5, mask, 0.8, 1, image);
     }
-
     // Bounding boxes and annotations
     for (auto &object : objects) {
         if(detected_class.empty())

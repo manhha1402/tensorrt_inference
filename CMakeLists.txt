@@ -44,7 +44,6 @@ include_directories(include)
 add_library(${PROJECT_NAME}_lib SHARED 
                 src/tensorrt_api/engine.cpp
                 src/model.cpp
-                src/face.cpp
                 src/detection.cpp
                 src/yolov8.cpp
                 src/yolov9.cpp
@@ -75,8 +74,8 @@ add_executable(yolov9_test nodes/yolov9_test.cpp)
 target_link_libraries(yolov9_test ${PROJECT_NAME}_lib)
 
 # Build and link the executables
-add_executable(yolov8_test nodes/yolov8_test.cpp)
-target_link_libraries(yolov8_test ${PROJECT_NAME}_lib)
+add_executable(detection_test nodes/detection_test.cpp)
+target_link_libraries(detection_test ${PROJECT_NAME}_lib)
 
 
 add_executable(retina_test nodes/retina_test.cpp)
@@ -97,7 +96,7 @@ install(
 )
 
 install(
-  TARGETS retina_test yolov8_test yolov9_test
+  TARGETS retina_test detection_test yolov9_test
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
 )
 

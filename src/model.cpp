@@ -5,6 +5,11 @@ Model::Model(const std::string& model_dir,const YAML::Node &config)
 {
     onnx_file_ = model_dir + "/" + config["onnx_file"].as<std::string>();
     std::cout<<onnx_file_<<std::endl;
+    
+     if(config["num_kps"])
+    {
+        num_kps_ = config["num_kps"].as<int>();
+    }
     if(config["normalized"])
     {
         normalized_ = config["normalized"].as<bool>();

@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
    
 
     // Run inference
-    const auto objects = yolo9.detectObjects(img);
+    const auto objects = yolo9.detect(img);
 
     // Draw the bounding boxes on the image
     yolo9.drawObjectLabels(img, objects);

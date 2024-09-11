@@ -3,11 +3,11 @@
 #include <opencv2/cudaimgproc.hpp>
 namespace tensorrt_inference
 {
-RetinaFace::RetinaFace(const std::string& model_dir,const YAML::Node &config) : Face(model_dir,config)
+RetinaFace::RetinaFace(const std::string& model_dir,const YAML::Node &config) : Detection(model_dir,config)
 {
 }
 
-std::vector<FaceBox> RetinaFace::postProcess(std::unordered_map<std::string, std::vector<float>> &feature_vectors,const ModelParams& params)
+std::vector<Object> RetinaFace::postprocess(std::unordered_map<std::string, std::vector<float>> &feature_vectors,const DetectionParams& params)
 {    
     const auto &input_info = m_trtEngine->getInputInfo().begin();
     const std::vector<float>& conf = feature_vectors["593"] ;
@@ -46,9 +46,10 @@ std::vector<FaceBox> RetinaFace::postProcess(std::unordered_map<std::string, std
         }
 
     }
-   cv::dnn::NMSBoxesBatched(bboxes, scores, labels, params.obj_threshold, params.nms_threshold, indices);
+    cv::dnn::NMSBoxesBatched(bboxes, scores, labels, params.obj_threshold, params.nms_threshold, indices);
+
     // Choose the top k detections
-    std::vector<FaceBox> num_faces;
+    std::vector<Object> num_faces;
     int cnt = 0;
     for (auto &chosenIdx : indices)
     {
@@ -56,9 +57,10 @@ std::vector<FaceBox> RetinaFace::postProcess(std::unordered_map<std::string, std
         {
             break;
         }
-        FaceBox face_box;
-        face_box.score = scores[chosenIdx];
+        Object face_box;
+        face_box.probability = scores[chosenIdx];
         face_box.rect = bboxes[chosenIdx];
+        face_box.label = 0;
         num_faces.push_back(face_box);
         cnt += 1;
     }

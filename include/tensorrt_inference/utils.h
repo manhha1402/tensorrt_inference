@@ -24,17 +24,17 @@ struct Object {
     //std::vector<cv::Point2f> kps;
 };
 
-struct KeyPoint{
-    int x;
-    int y;
-};
-struct FaceBox{
-    // The object bounding box rectangle.
-    cv::Rect_<float> rect;
-    std::vector<KeyPoint> landmarks;
-    bool has_mask = false;
-    float score = 0;
-};
+// struct KeyPoint{
+//     int x;
+//     int y;
+// };
+// struct FaceBox{
+//     // The object bounding box rectangle.
+//     cv::Rect_<float> rect;
+//     std::vector<KeyPoint> landmarks;
+//     bool has_mask = false;
+//     float score = 0;
+// };
 
 
 

@@ -20,12 +20,12 @@ int main(int argc, char *argv[]) {
     }
     //tensorrt_inference::ModelParams params(0.2,0.2,20);
     // Run inference
-    const auto faces = retinaface.detectFaces(img);
-    auto result = retinaface.drawFaceLabels(img,faces);
+    const auto faces = retinaface.detect(img);
+    retinaface.drawObjectLabels(img,faces);
    
     // Save the image to disk
     const auto outputName = inputImage.substr(0, inputImage.find_last_of('.')) + "_annotated.jpg";
-    cv::imwrite(outputName, result);
+    cv::imwrite(outputName, img);
     std::cout << "Saved annotated image to: " << outputName << std::endl;
 
     return 0;

@@ -48,7 +48,7 @@ std::vector<Object> YoloV8::postprocessDetect(std::unordered_map<std::string, st
         auto scoresPtr = rowPtr + 4;
         auto maxSPtr = std::max_element(scoresPtr, scoresPtr + CATEGORY);
         float score = *maxSPtr;
-        if (score > params.params.obj_threshold) {
+        if (score > params.obj_threshold) {
             float x = *bboxesPtr++;
             float y = *bboxesPtr++;
             float w = *bboxesPtr++;
@@ -72,13 +72,13 @@ std::vector<Object> YoloV8::postprocessDetect(std::unordered_map<std::string, st
         }
     }
     // Run NMS
-    cv::dnn::NMSBoxesBatched(bboxes, scores, labels, params.params.obj_threshold, params.params.nms_threshold, indices);
+    cv::dnn::NMSBoxesBatched(bboxes, scores, labels, params.obj_threshold, params.nms_threshold, indices);
 
     std::vector<Object> objects;
     // Choose the top k detections
     int cnt = 0;
     for (auto &chosenIdx : indices) {
-        if (cnt >= params.params.num_detect) {
+        if (cnt >= params.num_detect) {
             break;
          }
 
@@ -126,7 +126,7 @@ std::vector<Object> YoloV8::postProcessSegmentation(std::unordered_map<std::stri
         auto maskConfsPtr = rowPtr + 4 + numClasses;
         auto maxSPtr = std::max_element(scoresPtr, scoresPtr + numClasses);
         float score = *maxSPtr;
-        if (score > params.params.obj_threshold) {
+        if (score > params.obj_threshold) {
             float x = *bboxesPtr++;
             float y = *bboxesPtr++;
             float w = *bboxesPtr++;
@@ -154,14 +154,14 @@ std::vector<Object> YoloV8::postProcessSegmentation(std::unordered_map<std::stri
     }
 
     // Require OpenCV 4.7 for this function
-    cv::dnn::NMSBoxesBatched(bboxes, scores, labels,params.params.obj_threshold, params.params.nms_threshold, indices);
+    cv::dnn::NMSBoxesBatched(bboxes, scores, labels,params.obj_threshold, params.nms_threshold, indices);
 
     // Obtain the segmentation masks
     cv::Mat masks;
     std::vector<Object> objs;
     int cnt = 0;
     for (auto &i : indices) {
-        if (cnt >= params.params.num_detect) {
+        if (cnt >= params.num_detect) {
             break;
         }
         cv::Rect tmp = bboxes[i];
@@ -221,7 +221,7 @@ std::vector<Object> YoloV8::postprocessPose(std::unordered_map<std::string, std:
         auto scoresPtr = rowPtr + 4;
         auto kps_ptr = rowPtr + 5;
         float score = *scoresPtr;
-        if (score > params.params.obj_threshold) {
+        if (score > params.obj_threshold) {
             float x = *bboxesPtr++;
             float y = *bboxesPtr++;
             float w = *bboxesPtr++;
@@ -258,14 +258,14 @@ std::vector<Object> YoloV8::postprocessPose(std::unordered_map<std::string, std:
     }
 
     // Run NMS
-    cv::dnn::NMSBoxesBatched(bboxes, scores, labels, params.params.obj_threshold, params.params.nms_threshold, indices);
+    cv::dnn::NMSBoxesBatched(bboxes, scores, labels, params.obj_threshold, params.nms_threshold, indices);
 
     std::vector<Object> objects;
 
     // Choose the top k detections
     int cnt = 0;
     for (auto &chosenIdx : indices) {
-        if (cnt >= params.params.num_detect) {
+        if (cnt >= params.num_detect) {
             break;
         }
 

@@ -8,14 +8,16 @@
 namespace tensorrt_inference
 {
 
-struct ModelParams 
+struct DetectionParams 
 {
     float obj_threshold;
     float nms_threshold ;
     int num_detect;
-    ModelParams(): obj_threshold(0.25f),nms_threshold(0.65f), num_detect(20){}
-    ModelParams(const float obj_threshold, const float nms_threshold, const int num_detect):
-    obj_threshold(obj_threshold),nms_threshold(nms_threshold), num_detect(num_detect){}
+    float seg_threshold;
+    float kps_threshold;
+    DetectionParams(): obj_threshold(0.25f),nms_threshold(0.65f), num_detect(20), seg_threshold(0.5), kps_threshold(0.5){}
+    DetectionParams(const float obj_threshold, const float nms_threshold, const float seg_threshold, const float kps_threshold, const int num_detect):
+    obj_threshold(obj_threshold),nms_threshold(nms_threshold),seg_threshold(seg_threshold),kps_threshold(kps_threshold), num_detect(num_detect){}
 };
 
 class Model
@@ -44,6 +46,7 @@ protected:
     std::vector<float> div_vals_{1.0f, 1.0f, 1.0f};
     bool normalized_ = false;
     bool swapBR_ = true;
+    int num_kps_ = 17;
 
 
   

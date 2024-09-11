@@ -8,22 +8,15 @@
 
 namespace tensorrt_inference
 {
-struct DetectionParams
-{
-    ModelParams params;
-    float seg_threshold;
-    float kps_threshold;
-    DetectionParams(): seg_threshold(0.5), kps_threshold(0.5)
-    {}
-};
+
 class Detection : public Model 
 {
 public:
     explicit Detection(const std::string& model_dir,const YAML::Node &config);
 
    // Detect the objects in the image
-    std::vector<Object> detectObjects(const cv::Mat &inputImageBGR, const DetectionParams& params = DetectionParams());
-    std::vector<Object> detectObjects(cv::cuda::GpuMat &inputImageBGR, const DetectionParams& params = DetectionParams());
+    std::vector<Object> detect(const cv::Mat &inputImageBGR, const DetectionParams& params = DetectionParams());
+    std::vector<Object> detect(cv::cuda::GpuMat &inputImageBGR, const DetectionParams& params = DetectionParams());
     void drawObjectLabels(cv::Mat &image, const std::vector<Object> &objects, const DetectionParams& params = DetectionParams(),const std::vector<std::string>& detected_class = {}, unsigned int scale = 2);
       // Draw the object bounding boxes and labels on the image
     void drawBBoxLabel(cv::Mat &image, const Object &object, const DetectionParams& params = DetectionParams(), unsigned int scale = 2);
@@ -35,7 +28,6 @@ protected:
     std::map<int, std::string> class_labels_;
     int CATEGORY;
     bool agnostic_;
-    int num_kps_ = 17;
     std::vector<cv::Scalar> class_colors_;
 
     const std::vector<std::vector<unsigned int>> KPS_COLORS = {
