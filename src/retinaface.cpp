@@ -7,7 +7,7 @@ RetinaFace::RetinaFace(const std::string& model_dir,const YAML::Node &config) : 
 {
 }
 
-std::vector<FaceBox> RetinaFace::postProcess(std::unordered_map<std::string, std::vector<float>> &feature_vectors)
+std::vector<FaceBox> RetinaFace::postProcess(std::unordered_map<std::string, std::vector<float>> &feature_vectors,const ModelParams& params)
 {    
     const auto &input_info = m_trtEngine->getInputInfo().begin();
     const std::vector<float>& conf = feature_vectors["593"] ;
@@ -20,7 +20,7 @@ std::vector<FaceBox> RetinaFace::postProcess(std::unordered_map<std::string, std
     std::vector<int> indices;
     create_anchor_retinaface(anchor, input_info->second.dims.d[3], input_info->second.dims.d[2]);
     for (int i = 0; i < anchor.size(); ++i) {
-        if (conf[i * 2 + 1] > obj_threshold_) 
+        if (conf[i * 2 + 1] > params.obj_threshold) 
         {
             anchorBox tmp = anchor[i];
             anchorBox tmp1;
@@ -46,13 +46,13 @@ std::vector<FaceBox> RetinaFace::postProcess(std::unordered_map<std::string, std
         }
 
     }
-   cv::dnn::NMSBoxesBatched(bboxes, scores, labels, obj_threshold_, nms_threshold_, indices);
+   cv::dnn::NMSBoxesBatched(bboxes, scores, labels, params.obj_threshold, params.nms_threshold, indices);
     // Choose the top k detections
     std::vector<FaceBox> num_faces;
     int cnt = 0;
     for (auto &chosenIdx : indices)
     {
-        if (cnt >= num_detect_)
+        if (cnt >= params.num_detect)
         {
             break;
         }

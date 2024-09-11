@@ -4,16 +4,16 @@ namespace tensorrt_inference
 YoloV9::YoloV9(const std::string& model_dir,const YAML::Node &config) : 
 Detection(model_dir,config)
 {}
-std::vector<Object> YoloV9::postprocess(std::unordered_map<std::string, std::vector<float>> &feature_vectors)
+std::vector<Object> YoloV9::postprocess(std::unordered_map<std::string, std::vector<float>> &feature_vectors, const DetectionParams& params)
 {
     
     if(m_trtEngine->getOutputInfo().size () == 1)
     {
-        return postprocessDetect(feature_vectors);
+        return postprocessDetect(feature_vectors,params);
     }
     else if (m_trtEngine->getOutputInfo().size () == 2)
     {
-        return postProcessSegmentation(feature_vectors);
+        return postProcessSegmentation(feature_vectors,params);
     }
     else{
 
@@ -23,7 +23,7 @@ std::vector<Object> YoloV9::postprocess(std::unordered_map<std::string, std::vec
 }
 
     // Postprocess the output
-std::vector<Object> YoloV9::postprocessDetect(std::unordered_map<std::string, std::vector<float>> &feature_vectors)
+std::vector<Object> YoloV9::postprocessDetect(std::unordered_map<std::string, std::vector<float>> &feature_vectors, const DetectionParams& params)
 { 
     int num_anchors = m_trtEngine->getOutputInfo().at("output0").dims.d[2];
     int num_channels = m_trtEngine->getOutputInfo().at("output0").dims.d[1];
@@ -73,7 +73,7 @@ std::vector<Object> YoloV9::postprocessDetect(std::unordered_map<std::string, st
         auto scoresPtr = rowPtr + 4;
         auto maxSPtr = std::max_element(scoresPtr, scoresPtr + CATEGORY);
         float score = *maxSPtr;
-        if (score > obj_threshold_) {
+        if (score > params.params.obj_threshold) {
             float x = *bboxesPtr++;
             float y = *bboxesPtr++;
             float w = *bboxesPtr++;
@@ -97,13 +97,13 @@ std::vector<Object> YoloV9::postprocessDetect(std::unordered_map<std::string, st
         }
     }
     // Run NMS
-    cv::dnn::NMSBoxesBatched(bboxes, scores, labels, obj_threshold_, nms_threshold_, indices);
+    cv::dnn::NMSBoxesBatched(bboxes, scores, labels, params.params.obj_threshold, params.params.nms_threshold, indices);
 
     std::vector<Object> objects;
     // Choose the top k detections
     int cnt = 0;
     for (auto &chosenIdx : indices) {
-        if (cnt >= num_detect_) {
+        if (cnt >= params.params.num_detect) {
             break;
          }
 
@@ -119,7 +119,7 @@ std::vector<Object> YoloV9::postprocessDetect(std::unordered_map<std::string, st
 }
 
     // Postprocess the output for segmentation model
-std::vector<Object> YoloV9::postProcessSegmentation(std::unordered_map<std::string, std::vector<float>> &feature_vectors)
+std::vector<Object> YoloV9::postProcessSegmentation(std::unordered_map<std::string, std::vector<float>> &feature_vectors, const DetectionParams& params)
 {
 
     const auto& output0_info = m_trtEngine->getOutputInfo().at("output0");
@@ -129,14 +129,9 @@ std::vector<Object> YoloV9::postProcessSegmentation(std::unordered_map<std::stri
     const int num_seg_channels = output1_info.dims.d[1];
 
     const int num_net0_anchors = output0_info.dims.d[2];
-
     const int SEG_H = output1_info.dims.d[2];
     const int SEG_W = output1_info.dims.d[3];
-
     const auto numClasses = num_net0_channels - num_seg_channels - 4;
-
-    
-
     cv::Mat output = cv::Mat(num_net0_channels, num_net0_anchors, CV_32F, feature_vectors.at("output0").data());
     output = output.t();
 
@@ -156,7 +151,7 @@ std::vector<Object> YoloV9::postProcessSegmentation(std::unordered_map<std::stri
         auto maskConfsPtr = rowPtr + 4 + numClasses;
         auto maxSPtr = std::max_element(scoresPtr, scoresPtr + numClasses);
         float score = *maxSPtr;
-        if (score > obj_threshold_) {
+        if (score > params.params.obj_threshold) {
             float x = *bboxesPtr++;
             float y = *bboxesPtr++;
             float w = *bboxesPtr++;
@@ -184,14 +179,14 @@ std::vector<Object> YoloV9::postProcessSegmentation(std::unordered_map<std::stri
     }
 
     // Require OpenCV 4.7 for this function
-    cv::dnn::NMSBoxesBatched(bboxes, scores, labels, obj_threshold_, nms_threshold_, indices);
+    cv::dnn::NMSBoxesBatched(bboxes, scores, labels, params.params.obj_threshold, params.params.nms_threshold, indices);
 
     // Obtain the segmentation masks
     cv::Mat masks;
     std::vector<Object> objs;
     int cnt = 0;
     for (auto &i : indices) {
-        if (cnt >= num_detect_) {
+        if (cnt >= params.params.num_detect) {
             break;
         }
         cv::Rect tmp = bboxes[i];
@@ -225,7 +220,7 @@ std::vector<Object> YoloV9::postProcessSegmentation(std::unordered_map<std::stri
             dest = 1.0 / (1.0 + dest);
             dest = dest(roi);
             cv::resize(dest, mask, cv::Size(static_cast<int>(input_frame_w_), static_cast<int>(input_frame_h_)), cv::INTER_LINEAR);
-            objs[i].box_mask = mask(objs[i].rect) > seg_threshold_;
+            objs[i].box_mask = mask(objs[i].rect) > params.seg_threshold;
         }
     }
 

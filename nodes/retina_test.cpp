@@ -18,15 +18,15 @@ int main(int argc, char *argv[]) {
         std::cout << "Error: Unable to read image at path '" << inputImage << "'" << std::endl;
         return -1;
     }
-
+    //tensorrt_inference::ModelParams params(0.2,0.2,20);
     // Run inference
     const auto faces = retinaface.detectFaces(img);
-    for(const auto &face : faces) {
-        cv::Scalar color= cv::Scalar(255, 0, 0);
-        cv::rectangle(img, face.rect, color, 2, cv::LINE_8, 0);
-
-    }
-    cv::imwrite("result.jpg",img);
+    auto result = retinaface.drawFaceLabels(img,faces);
+   
+    // Save the image to disk
+    const auto outputName = inputImage.substr(0, inputImage.find_last_of('.')) + "_annotated.jpg";
+    cv::imwrite(outputName, result);
+    std::cout << "Saved annotated image to: " << outputName << std::endl;
 
     return 0;
 }

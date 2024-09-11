@@ -11,7 +11,7 @@ public:
 
 private:
     // Postprocess the output
-    std::vector<FaceBox> postProcess(std::unordered_map<std::string, std::vector<float>> &feature_vectors) override;
+    std::vector<FaceBox> postProcess(std::unordered_map<std::string, std::vector<float>> &feature_vectors,const ModelParams& params = ModelParams()) override;
     void create_anchor_retinaface(std::vector<anchorBox> &anchor, int w, int h) override;
 };
 }

@@ -5,6 +5,22 @@ Model::Model(const std::string& model_dir,const YAML::Node &config)
 {
     onnx_file_ = model_dir + "/" + config["onnx_file"].as<std::string>();
   
+    if(config["normalized"])
+    {
+        normalized_ = config["normalized"].as<bool>();
+    }
+     if(config["swapBR"])
+    {
+        swapBR_ = config["swapBR"].as<bool>();
+    }
+    if(config["sub_vals"])
+    {
+       sub_vals_ = config["sub_vals"].as<std::vector<float>>();
+    }
+    if(config["div_vals"])
+    {
+        div_vals_ = config["div_vals"].as<std::vector<float>>();
+    }
     // Specify options for GPU inference
     Options options;
     options.optBatchSize = 1;

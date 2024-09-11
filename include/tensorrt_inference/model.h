@@ -7,6 +7,17 @@
 #include "tensorrt_inference/utils.h"
 namespace tensorrt_inference
 {
+
+struct ModelParams 
+{
+    float obj_threshold;
+    float nms_threshold ;
+    int num_detect;
+    ModelParams(): obj_threshold(0.25f),nms_threshold(0.65f), num_detect(20){}
+    ModelParams(const float obj_threshold, const float nms_threshold, const int num_detect):
+    obj_threshold(obj_threshold),nms_threshold(nms_threshold), num_detect(num_detect){}
+};
+
 class Model
 {
 public:
@@ -35,9 +46,6 @@ protected:
     bool swapBR_ = true;
 
 
-    float obj_threshold_= 0.25f;
-    float nms_threshold_ = 0.65f;
-    float seg_threshold_ = 0.5;
-    int num_detect_;
+  
 };
 }

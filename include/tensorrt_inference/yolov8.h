@@ -11,17 +11,17 @@ public:
    
 private:
     // Postprocess the output
-    std::vector<Object> postprocess(std::unordered_map<std::string, std::vector<float>> &feature_vector) override;
+    std::vector<Object> postprocess(std::unordered_map<std::string, std::vector<float>> &feature_vectors, const DetectionParams& params = DetectionParams()) override;
 
 
    // Postprocess the output
-    std::vector<Object> postprocessDetect(std::unordered_map<std::string, std::vector<float>> &feature_vector);
+    std::vector<Object> postprocessDetect(std::unordered_map<std::string, std::vector<float>> &feature_vectors, const DetectionParams& params = DetectionParams());
 
     // Postprocess the output for pose model
-    std::vector<Object> postprocessPose(std::unordered_map<std::string, std::vector<float>> &feature_vector);
+    std::vector<Object> postprocessPose(std::unordered_map<std::string, std::vector<float>> &feature_vectors, const DetectionParams& params = DetectionParams());
 
     // Postprocess the output for segmentation model
-    std::vector<Object> postProcessSegmentation(std::unordered_map<std::string, std::vector<float>> &feature_vector);
+    std::vector<Object> postProcessSegmentation(std::unordered_map<std::string, std::vector<float>> &feature_vectors, const DetectionParams& params = DetectionParams());
 
 };
 }
