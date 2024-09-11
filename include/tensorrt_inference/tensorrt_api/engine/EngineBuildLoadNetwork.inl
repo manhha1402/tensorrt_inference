@@ -95,12 +95,6 @@ bool Engine<T>::loadNetwork(std::string trtModelPath) {
     // Storage for holding the input and output buffers
     // This will be passed to TensorRT for inference
     clearGpuBuffers();
-    //m_buffers.resize(m_engine->getNbIOTensors()); //getNbBindings
-    //m_outputLengths.clear();
-    //m_inputDims.clear();
-    //m_outputDims.clear();
-    //output_tensor_names_.clear();
-    //input_tensor_names_.clear();
     input_map_.clear();
     output_map_.clear();
     // Create a cuda stream
@@ -128,10 +122,6 @@ bool Engine<T>::loadNetwork(std::string trtModelPath) {
                 throw std::runtime_error(msg);
             }
             // Store the input dims for later use
-            //m_inputDims.push_back(tensorShape);
-            //input_tensor_names_.push_back(tensorName);
-            //Util::checkCudaErrorCode(cudaMallocAsync(&m_buffers[i], tensor_length * sizeof(T), stream));
-
             input_map_[tensorName].dims = tensorShape;
             input_map_[tensorName].tensor_length = tensor_length;
             Util::checkCudaErrorCode(cudaMallocAsync(&input_map_[tensorName].buffer, tensor_length * sizeof(T), stream));
@@ -172,9 +162,6 @@ bool Engine<T>::loadNetwork(std::string trtModelPath) {
             // Now size the output buffer appropriately, taking into account the max
             // possible batch size (although we could actually end up using less
             // memory)
-            //Util::checkCudaErrorCode(cudaMallocAsync(&m_buffers[i], tensor_length * sizeof(T), stream));
-            // output_tensor_names_.push_back(tensorName);
-            // m_outputDims.push_back(tensorShape);
             output_map_[tensorName].dims = tensorShape;
             output_map_[tensorName].tensor_length = tensor_length;
             Util::checkCudaErrorCode(cudaMallocAsync(&output_map_[tensorName].buffer, tensor_length * sizeof(T), stream));
