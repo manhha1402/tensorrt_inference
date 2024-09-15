@@ -1,0 +1,26 @@
+﻿﻿---
+Language:        Cpp
+# This applies the Google C++ Style Guide format
+BasedOnStyle:    Google
+
+# Customize specific options (if needed)
+AccessModifierOffset: -2               # Access modifiers are indented by -2 spaces
+AlignConsecutiveAssignments: false     # Don't align consecutive assignments
+AlignConsecutiveDeclarations: false    # Don't align consecutive declarations
+AlignOperands:   true                  # Align operands in expressions
+AlignTrailingComments: true            # Align trailing comments in columns
+AllowShortFunctionsOnASingleLine: Inline # Allow short functions to be defined on one line
+AllowShortIfStatementsOnASingleLine: false # Don't allow short `if` statements to be on one line
+AllowShortLoopsOnASingleLine: false    # Don't allow short loops on a single line
+AlwaysBreakTemplateDeclarations: true  # Break template declarations to a new line
+BreakBeforeBraces:  Attach             # Put opening braces on the same line as control statements
+ColumnLimit:     80                    # Limit the line width to 80 characters
+ConstructorInitializerIndentWidth: 4   # Indent constructor initializer lists by 4 spaces
+DerivePointerAlignment: false          # Don't derive pointer alignment automatically
+PointerAlignment: Left                 # Place pointer alignment on the left (* next to the type)
+IndentWidth:     4                     # Indent with 2 spaces
+TabWidth:        2                     # Tabs count as 2 spaces
+UseTab:         Never                  # Always use spaces, never tabs
+IndentCaseLabels: true                 # Indent case labels in switch statements
+SortIncludes:    false                 # Don't sort include statements automatically
+...

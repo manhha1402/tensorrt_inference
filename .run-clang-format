@@ -1,0 +1,4 @@
+#!/bin/bash
+find . -type d \( -name 3rdparty -name 3rdparty_downloads -name build \) -prune -o -type f -regex '.*\.\(cpp\|hpp\|cc\|cxx\|h\|hxx\|cu\|cuh\)' -exec clang-format -style=file -i {} \;
+
+

@@ -3,21 +3,22 @@
 
 #include "tensorrt_inference/detection.h"
 namespace tensorrt_inference {
-class RetinaFace : public Detection {
-  struct anchorBox {
-    float cx;
-    float cy;
-    float sx;
-    float sy;
-  };
-
+struct CroppedFace {
+  cv::Mat face;
+  cv::Mat face_mat;
+  cv::Rect rect;
+};
+class ArcFace : public Detection {
  public:
   // Builds the onnx model into a TensorRT engine, and loads the engine into
   // memory
-  RetinaFace(const std::string &model_name,
-             const std::filesystem::path &model_dir =
-                 std::filesystem::path(std::getenv("HOME")) / "data" /
-                 "weights");
+  ArcFace(const std::string &model_name,
+          const std::filesystem::path &model_dir =
+              std::filesystem::path(std::getenv("HOME")) / "data" / "weights");
+  std::vector<CroppedFace> getCroppedFaces(const cv::Mat &frame,
+                                           const std::vector<Object> &faces);
+  void preprocessFace(cv::Mat &face, cv::Mat &output);
+  void preprocessFaces();
 
  private:
   // Postprocess the output
@@ -25,7 +26,5 @@ class RetinaFace : public Detection {
       std::unordered_map<std::string, std::vector<float>> &feature_vectors,
       const DetectionParams &params = DetectionParams(),
       const std::vector<std::string> &detected_class = {}) override;
-
-  void create_anchor_retinaface(std::vector<anchorBox> &anchor, int w, int h);
 };
 }  // namespace tensorrt_inference

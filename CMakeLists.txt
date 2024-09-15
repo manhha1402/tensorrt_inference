@@ -17,6 +17,7 @@ if (ENABLE_BENCHMARKS)
 endif()
 # For finding FindTensorRT.cmake
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+option(BUILD_PYTHON_BINDING "Build Python binding" ON)
 
 
 #OpenMP
@@ -48,6 +49,7 @@ add_library(${PROJECT_NAME}_lib SHARED
                 src/yolov8.cpp
                 src/yolov9.cpp
                 src/retinaface.cpp
+                src/arcface.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC 
@@ -59,27 +61,31 @@ target_link_libraries(${PROJECT_NAME}_lib PUBLIC
                         fmt::fmt
                     )
 target_include_directories(
-  ${PROJECT_NAME}_lib 
+  ${PROJECT_NAME}_lib  
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
   ${CUDA_INCLUDE_DIRS}
   PRIVATE ${CMAKE_CURRENT_BINARY_DIR}  # for private headers generated during build
 )
 
+if(BUILD_PYTHON_BINDING)
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+  file(MAKE_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+  file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+  find_package(pybind11 REQUIRED)
+  add_subdirectory(pybind)
+endif()
 
-
-
-# Build and link the executables
-add_executable(yolov9_test nodes/yolov9_test.cpp)
-target_link_libraries(yolov9_test ${PROJECT_NAME}_lib)
 
 # Build and link the executables
 add_executable(detection_test nodes/detection_test.cpp)
 target_link_libraries(detection_test ${PROJECT_NAME}_lib)
 
 
-add_executable(retina_test nodes/retina_test.cpp)
-target_link_libraries(retina_test ${PROJECT_NAME}_lib)
+add_executable(arcface_test nodes/arcface_test.cpp)
+target_link_libraries(arcface_test ${PROJECT_NAME}_lib)
 
 ##########
 # EXPORT #
@@ -96,7 +102,7 @@ install(
 )
 
 install(
-  TARGETS retina_test detection_test yolov9_test
+  TARGETS arcface_test detection_test 
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
 )
 
