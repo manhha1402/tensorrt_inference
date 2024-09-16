@@ -152,7 +152,6 @@ std::vector<Object> YoloV8::postProcessSegmentation(
       if (detected_class.empty() ||
           (detected_class.size() == 1 &&
            (detected_class[0] == "all" || detected_class[0] == ""))) {
-        std::cout << detected_class[0] << std::endl;
         float x = *bboxesPtr++;
         float y = *bboxesPtr++;
         float w = *bboxesPtr++;
