@@ -17,7 +17,7 @@ if (ENABLE_BENCHMARKS)
 endif()
 # For finding FindTensorRT.cmake
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
-option(BUILD_PYTHON_BINDING "Build Python binding" ON)
+option(BUILD_PYTHON_BINDING "Build Python binding" OFF)
 
 
 #OpenMP
@@ -50,6 +50,7 @@ add_library(${PROJECT_NAME}_lib SHARED
                 src/yolov9.cpp
                 src/retinaface.cpp
                 src/arcface.cpp
+                src/paddleocr.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC 
@@ -83,6 +84,9 @@ endif()
 add_executable(detection_test nodes/detection_test.cpp)
 target_link_libraries(detection_test ${PROJECT_NAME}_lib)
 
+add_executable(paddleocr_test nodes/paddleocr_test.cpp)
+target_link_libraries(paddleocr_test ${PROJECT_NAME}_lib)
+
 
 add_executable(arcface_test nodes/arcface_test.cpp)
 target_link_libraries(arcface_test ${PROJECT_NAME}_lib)
@@ -102,7 +106,7 @@ install(
 )
 
 install(
-  TARGETS arcface_test detection_test 
+  TARGETS arcface_test detection_test paddleocr_test
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
 )
 

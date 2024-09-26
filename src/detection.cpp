@@ -3,8 +3,9 @@
 #include "tensorrt_inference/detection.h"
 namespace tensorrt_inference {
 Detection::Detection(const std::string &model_name,
+                     tensorrt_inference::Options options,
                      const std::filesystem::path &model_dir)
-    : Model(model_name, model_dir) {
+    : Model(model_name, options, model_dir) {
   std::string config_file = (model_dir / model_name / "config.yaml").string();
   YAML::Node config = YAML::LoadFile(config_file);
 

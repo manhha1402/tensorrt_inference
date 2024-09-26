@@ -1,8 +1,8 @@
 #pragma once
 
-#include "NvOnnxParser.h"
 #include <cuda_fp16.h>
 #include <cuda_runtime.h>
+
 #include <filesystem>
 #include <fstream>
 #include <opencv2/core/cuda.hpp>
@@ -11,6 +11,7 @@
 #include <opencv2/cudawarping.hpp>
 #include <opencv2/opencv.hpp>
 
+#include "NvOnnxParser.h"
 #include "macros.h"
 #include "tensorrt_inference/tensorrt_api/Int8Calibrator.h"
 #include "tensorrt_inference/tensorrt_api/interfaces/IEngine.h"
@@ -44,17 +45,22 @@ struct Options {
   // The batch size which should be optimized for.
   int32_t optBatchSize = 1;
   // Maximum allowable batch size
-  int32_t maxBatchSize = 16;
+  int32_t maxBatchSize = 1;
   // GPU device index
   int deviceIndex = 0;
   // Directory where the engine file should be saved
   std::string engine_file_dir = "";
   // Maximum allowed input width
-  int32_t maxInputWidth = -1; // Default to -1 --> expecting fixed input size
+  int32_t maxInputWidth = -1;  // Default to -1 --> expecting fixed input size
   // Minimum allowed input width
-  int32_t minInputWidth = -1; // Default to -1 --> expecting fixed input size
+  int32_t minInputWidth = -1;  // Default to -1 --> expecting fixed input size
   // Optimal input width
-  int32_t optInputWidth = -1; // Default to -1 --> expecting fixed input size
+  int32_t optInputWidth = -1;  // Default to -1 --> expecting fixed input size
+
+  std::array<int, 4> MIN_DIMS_ = {1, 3, 20, 12};
+  std::array<int, 4> OPT_DIMS_ = {1, 3, 256, 256};
+  std::array<int, 4> MAX_DIMS_ = {1, 3, 960, 960};
+  Options() {};
 };
 
 // Class to extend TensorRT logger
@@ -62,8 +68,9 @@ class Logger : public nvinfer1::ILogger {
   void log(Severity severity, const char *msg) noexcept override;
 };
 
-template <typename T> class Engine : public IEngine<T> {
-public:
+template <typename T>
+class Engine : public IEngine<T> {
+ public:
   Engine(const Options &options);
   ~Engine();
 
@@ -82,7 +89,7 @@ public:
   // Run inference.
   // Input format [input][batch][cv::cuda::GpuMat]
   // Output format [batch][output][feature_vector]
-  bool runInference(const cv::cuda::GpuMat &inputs,
+  bool runInference(cv::cuda::GpuMat &inputs,
                     std::unordered_map<std::string, std::vector<T>>
                         &feature_vectors) override;
 
@@ -96,12 +103,12 @@ public:
       const cv::cuda::GpuMat &input, size_t height, size_t width,
       const cv::Scalar &bgcolor = cv::Scalar(0, 0, 0));
 
-  [[nodiscard]] const std::unordered_map<std::string, NetInfo> &
-  getInputInfo() const override {
+  [[nodiscard]] const std::unordered_map<std::string, NetInfo> &getInputInfo()
+      const override {
     return input_map_;
   };
-  [[nodiscard]] const std::unordered_map<std::string, NetInfo> &
-  getOutputInfo() const override {
+  [[nodiscard]] const std::unordered_map<std::string, NetInfo> &getOutputInfo()
+      const override {
     return output_map_;
   };
 
@@ -122,8 +129,14 @@ public:
   //                                        const std::array<float, 3> &divVals,
   //                                        bool normalize, bool swapRB =
   //                                        false);
+  // virtual uint32_t getMaxOutputLength(const nvinfer1::Dims &tensorShape)
+  // const;
 
-private:
+ protected:
+  const Options m_options;
+  bool haveDynamicDims_;
+
+ private:
   // Build the network
   bool build(const std::string &onnxModelPath);
 
@@ -150,16 +163,18 @@ private:
   std::unique_ptr<Int8EntropyCalibrator2> m_calibrator = nullptr;
   std::unique_ptr<nvinfer1::ICudaEngine> m_engine = nullptr;
   std::unique_ptr<nvinfer1::IExecutionContext> m_context = nullptr;
-  const Options m_options;
   Logger m_logger;
 };
 
 template <typename T>
 Engine<T>::Engine(const Options &options) : m_options(options) {}
 
-template <typename T> Engine<T>::~Engine() { clearGpuBuffers(); }
+template <typename T>
+Engine<T>::~Engine() {
+  clearGpuBuffers();
+}
 
-} // namespace tensorrt_inference
+}  // namespace tensorrt_inference
 // Include inline implementations
 #include "engine/EngineBuildLoadNetwork.inl"
 #include "engine/EngineRunInference.inl"

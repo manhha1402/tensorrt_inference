@@ -12,10 +12,11 @@ namespace tensorrt_inference {
 
 class Detection : public Model {
  public:
-  explicit Detection(const std::string &model_name,
-                     const std::filesystem::path &model_dir =
-                         std::filesystem::path(std::getenv("HOME")) / "data" /
-                         "weights");
+  explicit Detection(
+      const std::string &model_name,
+      tensorrt_inference::Options options = tensorrt_inference::Options(),
+      const std::filesystem::path &model_dir =
+          std::filesystem::path(std::getenv("HOME")) / "data" / "weights");
 
   // Detect the objects in the image
   std::vector<Object> detect(

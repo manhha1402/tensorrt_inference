@@ -1,8 +1,9 @@
 #include "tensorrt_inference/yolov8.h"
 namespace tensorrt_inference {
 YoloV8::YoloV8(const std::string &model_name,
+               tensorrt_inference::Options options,
                const std::filesystem::path &model_dir)
-    : Detection(model_name, model_dir) {}
+    : Detection(model_name, options, model_dir) {}
 std::vector<Object> YoloV8::postprocess(
     std::unordered_map<std::string, std::vector<float>> &feature_vectors,
     const DetectionParams &params,

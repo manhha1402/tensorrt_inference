@@ -3,6 +3,7 @@
 #include <opencv2/cudaimgproc.hpp>
 
 #include "tensorrt_inference/tensorrt_inference.h"
+
 // Runs object detection on video stream then displays annotated results.
 int main(int argc, char *argv[]) {
   // Read the input image
@@ -13,22 +14,9 @@ int main(int argc, char *argv[]) {
               << std::endl;
     return -1;
   }
-  std::string model_name = argv[2];
   std::shared_ptr<tensorrt_inference::Detection> detection;
-  if (model_name.find("yolov8") != std::string::npos) {
-    detection = std::make_shared<tensorrt_inference::YoloV8>(model_name);
-  } else if (model_name.find("yolov9") != std::string::npos) {
-    detection = std::make_shared<tensorrt_inference::YoloV9>(model_name);
-  } else if (model_name.find("facedetector") != std::string::npos) {
-    detection = std::make_shared<tensorrt_inference::RetinaFace>(model_name);
-  } else if (model_name.find("retinaface") != std::string::npos) {
-    detection = std::make_shared<tensorrt_inference::RetinaFace>(model_name);
-  } else if (model_name.find("plate_detection") != std::string::npos) {
-    detection = std::make_shared<tensorrt_inference::YoloV8>(model_name);
-  } else {
-    std::cout << "unkown model" << std::endl;
-    return 1;
-  }
+  detection = std::make_shared<tensorrt_inference::YoloV8>("plate_detection");
+
   // Run inference
   tensorrt_inference::DetectionParams params(0.5, 0.5, 0.5, 0.5, 20);
   std::vector<std::string> detected_classes{"all"};
@@ -43,6 +31,29 @@ int main(int argc, char *argv[]) {
       inputImage.substr(0, inputImage.find_last_of('.')) + "_annotated.jpg";
   cv::imwrite(outputName, result);
   std::cout << "Saved annotated image to: " << outputName << std::endl;
+  auto plates = tensorrt_inference::getCroppedObjects(img, objects, img.cols,
+                                                      img.rows, false);
+  int i = 0;
+  for (const auto &plate : plates) {
+    cv::imwrite("cropped_" + std::to_string(i) + ".jpg", plate.croped_object);
+    i++;
+  }
+  const std::filesystem::path &model_dir =
+      std::filesystem::path(std::getenv("HOME")) / "data" / "weights";
+  const std::string model_name = "paddleocr";
+  tensorrt_inference::Options options;
+  options.MIN_DIMS_ = {1, 3, 48, 10};
+  options.OPT_DIMS_ = {1, 3, 48, 320};
+  options.MAX_DIMS_ = {8, 3, 48, 2000};
+  options.engine_file_dir = (model_dir / model_name).string();
+  auto rec =
+      std::make_shared<tensorrt_inference::PaddleOCR>(model_name, options);
+  for (size_t i = 0; i < plates.size(); i++) {
+    cv::cuda::GpuMat image(plates[i].croped_object);
 
+    cv::cuda::GpuMat input = rec->preprocess(image);
+    std::unordered_map<std::string, std::vector<float>> feature_vectors;
+    rec->runInference(input, feature_vectors);
+  }
   return 0;
 }

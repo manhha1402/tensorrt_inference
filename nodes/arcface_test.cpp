@@ -18,7 +18,6 @@ void preprocessFace(cv::Mat &face, cv::Mat &output) {
 int main(int argc, char *argv[]) {
   std::string inputImage1 = argv[1];
   std::string inputImage2 = argv[2];
-
   tensorrt_inference::RetinaFace retinaface("facedetector");
   // Read the input image
   auto img1 = cv::imread(inputImage1);

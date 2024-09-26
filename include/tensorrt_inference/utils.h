@@ -24,7 +24,11 @@ struct Object {
   // Landmarks face detection
   std::vector<cv::Point2f> landmarks{};
 };
-
+struct CroppedObject {
+  double probability;
+  cv::Rect rect;
+  cv::Mat croped_object;
+};
 inline std::map<int, std::string> readClassLabel(const std::string &fileName) {
   YAML::Node config = YAML::LoadFile(fileName);
 
@@ -34,5 +38,24 @@ inline std::map<int, std::string> readClassLabel(const std::string &fileName) {
   }
   return class_label;
 }
+inline std::vector<CroppedObject> getCroppedObjects(
+    const cv::Mat &frame,
+    const std::vector<tensorrt_inference::Object> &objects, const int w,
+    const int h, bool resize = true) {
+  std::vector<CroppedObject> cropped_objects;
+  for (auto &object : objects) {
+    cv::Mat tempCrop = frame(object.rect);
+    CroppedObject curr_object;
+    if (resize) {
+      cv::resize(tempCrop, curr_object.croped_object, cv::Size(w, h), 0, 0,
+                 cv::INTER_CUBIC);  // resize to network dimension input
+    } else {
+      curr_object.croped_object = tempCrop;
+    }
 
+    curr_object.rect = object.rect;
+    cropped_objects.push_back(curr_object);
+  }
+  return cropped_objects;
+}
 }  // namespace tensorrt_inference

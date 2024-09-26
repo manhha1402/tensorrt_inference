@@ -3,8 +3,9 @@
 #include <opencv2/cudaimgproc.hpp>
 namespace tensorrt_inference {
 RetinaFace::RetinaFace(const std::string &model_name,
+                       tensorrt_inference::Options options,
                        const std::filesystem::path &model_dir)
-    : Detection(model_name, model_dir) {}
+    : Detection(model_name, options, model_dir) {}
 
 std::vector<Object> RetinaFace::postprocess(
     std::unordered_map<std::string, std::vector<float>> &feature_vectors,

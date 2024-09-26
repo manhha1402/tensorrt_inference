@@ -1,14 +1,20 @@
-#include <tensorrt_inference/model.h>
+#include "tensorrt_inference/paddleocr.h"
+
+#include <opencv2/cudaimgproc.hpp>
 namespace tensorrt_inference {
-Model::Model(const std::string &model_name, tensorrt_inference::Options options,
-             const std::filesystem::path &model_dir) {
+PaddleOCR::PaddleOCR(const std::string &model_name,
+                     tensorrt_inference::Options options,
+                     const std::filesystem::path &model_dir)
+    : Engine(options) {
   std::string config_file = (model_dir / model_name / "config.yaml").string();
   YAML::Node config = YAML::LoadFile(config_file);
 
   onnx_file_ =
       (model_dir / model_name / config["onnx_file"].as<std::string>()).string();
   std::cout << onnx_file_ << std::endl;
-
+  // Specify options for GPU inference
+  // options.engine_file_dir = getFolderOfFile(onnx_file_);
+  // std::cout << options.engine_file_dir << std::endl;
   if (config["num_kps"]) {
     num_kps_ = config["num_kps"].as<int>();
   }
@@ -24,21 +30,18 @@ Model::Model(const std::string &model_name, tensorrt_inference::Options options,
   if (config["div_vals"]) {
     div_vals_ = config["div_vals"].as<std::vector<float>>();
   }
-  // Specify options for GPU inference
-  options.engine_file_dir = getFolderOfFile(onnx_file_);
-  /*
-  options.precision = config.precision;
-  options.calibrationDataDirectoryPath = config.calibrationDataDirectory;
 
-  if (options.precision == Precision::INT8) {
-      if (options.calibrationDataDirectoryPath.empty()) {
-          throw std::runtime_error("Error: Must supply calibration data path for
-  INT8 calibration");
-      }
+  if (config["labels_file"]) {
+    std::string labels_file =
+        (model_dir / model_name / config["labels_file"].as<std::string>())
+            .string();
+    if (Util::doesFileExist(std::filesystem::path(labels_file))) {
+      class_labels_ = readClassLabel(labels_file);
+    } else {
+      spdlog::error("label file is not existed!");
+    }
   }
-  */
-  m_trtEngine = std::make_unique<Engine<float>>(options);
-  auto succ = m_trtEngine->buildLoadNetwork(onnx_file_);
+  auto succ = buildLoadNetwork(onnx_file_);
   if (!succ) {
     const std::string errMsg =
         "Error: Unable to build or load the TensorRT engine. "
@@ -47,11 +50,15 @@ Model::Model(const std::string &model_name, tensorrt_inference::Options options,
     throw std::runtime_error(errMsg);
   }
 }
-Model::~Model() {}
+uint32_t PaddleOCR::getMaxOutputLength(
+    const nvinfer1::Dims &tensorShape) const {
+  return (m_options.MAX_DIMS_[3] + 4) / 8 *
+         tensorShape.d[tensorShape.nbDims - 1] * rec_batch_num_;
+}
 
-cv::cuda::GpuMat Model::preprocess(const cv::cuda::GpuMat &gpuImg) {
+cv::cuda::GpuMat PaddleOCR::preprocess(const cv::cuda::GpuMat &gpuImg) {
   // Populate the input vectors
-  const auto &input_info = m_trtEngine->getInputInfo().begin();
+  const auto &input_info = getInputInfo().begin();
 
   // These params will be used in the post-processing stage
   input_frame_h_ = gpuImg.rows;
@@ -68,7 +75,7 @@ cv::cuda::GpuMat Model::preprocess(const cv::cuda::GpuMat &gpuImg) {
   if (resized.rows != input_info->second.dims.d[2] ||
       resized.cols != input_info->second.dims.d[3]) {
     // Only resize if not already the right size to avoid unecessary copy
-    resized = Engine<float>::resizeKeepAspectRatioPadRightBottom(
+    resized = resizeKeepAspectRatioPadRightBottom(
         rgbMat, input_info->second.dims.d[2], input_info->second.dims.d[3],
         cv::Scalar(128, 128, 128));
   }
@@ -110,19 +117,6 @@ cv::cuda::GpuMat Model::preprocess(const cv::cuda::GpuMat &gpuImg) {
   cv::cuda::divide(mfloat, cv::Scalar(div_vals_[0], div_vals_[1], div_vals_[2]),
                    mfloat, 1, -1);
   return mfloat;
-}
-
-bool Model::doInference(
-    cv::cuda::GpuMat &gpuImg,
-    std::unordered_map<std::string, std::vector<float>> &feature_vectors) {
-  auto gpu_input = preprocess(gpuImg);
-  auto succ = m_trtEngine->runInference(gpu_input, feature_vectors);
-  if (!succ) {
-    std::string msg = "Error: Unable to run inference.";
-    spdlog::error(msg);
-    return false;
-  }
-  return true;
 }
 
 }  // namespace tensorrt_inference

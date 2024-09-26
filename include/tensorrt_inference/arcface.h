@@ -13,6 +13,7 @@ class ArcFace : public Detection {
   // Builds the onnx model into a TensorRT engine, and loads the engine into
   // memory
   ArcFace(const std::string &model_name,
+          tensorrt_inference::Options options = tensorrt_inference::Options(),
           const std::filesystem::path &model_dir =
               std::filesystem::path(std::getenv("HOME")) / "data" / "weights");
   std::vector<CroppedFace> getCroppedFaces(const cv::Mat &frame,

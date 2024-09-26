@@ -3,8 +3,9 @@
 #include <opencv2/cudaimgproc.hpp>
 namespace tensorrt_inference {
 ArcFace::ArcFace(const std::string &model_name,
+                 tensorrt_inference::Options options,
                  const std::filesystem::path &model_dir)
-    : Detection(model_name, model_dir) {}
+    : Detection(model_name, options, model_dir) {}
 std::vector<CroppedFace> ArcFace::getCroppedFaces(
     const cv::Mat &frame, const std::vector<Object> &faces) {
   const auto &input_info = m_trtEngine->getInputInfo().begin();
