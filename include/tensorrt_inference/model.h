@@ -9,29 +9,6 @@
 #include "tensorrt_inference/utils.h"
 namespace tensorrt_inference {
 
-struct DetectionParams {
-  float obj_threshold;
-  float nms_threshold;
-  float seg_threshold;
-  float kps_threshold;
-  int num_detect;
-
-  DetectionParams()
-      : obj_threshold(0.25f),
-        nms_threshold(0.65f),
-        seg_threshold(0.5),
-        kps_threshold(0.5),
-        num_detect(20) {}
-  DetectionParams(const float obj_threshold, const float nms_threshold,
-                  const float seg_threshold, const float kps_threshold,
-                  const int num_detect)
-      : obj_threshold(obj_threshold),
-        nms_threshold(nms_threshold),
-        seg_threshold(seg_threshold),
-        kps_threshold(kps_threshold),
-        num_detect(num_detect) {}
-};
-
 class Model {
  public:
   explicit Model(

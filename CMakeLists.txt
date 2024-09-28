@@ -44,13 +44,16 @@ include_directories(include)
 # Build the YoloV9 library
 add_library(${PROJECT_NAME}_lib SHARED 
                 src/tensorrt_api/engine.cpp
+                src/utils.cpp
                 src/model.cpp
                 src/detection.cpp
                 src/yolov8.cpp
                 src/yolov9.cpp
                 src/retinaface.cpp
                 src/arcface.cpp
-                src/paddleocr.cpp
+                src/paddle_ocr/clipper.cpp
+                src/paddle_ocr/paddleocr_utils.cpp
+                src/paddle_ocr/paddleocr.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC 

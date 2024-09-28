@@ -1,34 +1,14 @@
 #pragma once
-#include <yaml-cpp/yaml.h>
-
 #include <fstream>
+#include <opencv2/cudaarithm.hpp>
+#include <opencv2/cudabgsegm.hpp>
+#include <opencv2/cudaimgproc.hpp>
+#include <opencv2/cudawarping.hpp>
 #include <opencv2/opencv.hpp>
-namespace tensorrt_inference {
-// Utility method for checking if a file exists on disk
-inline bool doesFileExist(const std::string &name) {
-  std::ifstream f(name.c_str());
-  return f.good();
-}
 
-struct Object {
-  // The object class.
-  int label{};
-  // The detection's confidence probability.
-  float probability{};
-  // The object bounding box rectangle.
-  cv::Rect rect;
-  // Semantic segmentation mask
-  cv::Mat box_mask;
-  // Pose estimation key points
-  std::vector<float> kps{};
-  // Landmarks face detection
-  std::vector<cv::Point2f> landmarks{};
-};
-struct CroppedObject {
-  double probability;
-  cv::Rect rect;
-  cv::Mat croped_object;
-};
+#include "tensorrt_inference/types.h"
+namespace tensorrt_inference {
+
 inline std::map<int, std::string> readClassLabel(const std::string &fileName) {
   YAML::Node config = YAML::LoadFile(fileName);
 
@@ -58,4 +38,22 @@ inline std::vector<CroppedObject> getCroppedObjects(
   }
   return cropped_objects;
 }
+
+// refenrence:
+// https://pyimagesearch.com/2014/08/25/4-point-opencv-getperspective-transform-example/
+
+cv::cuda::GpuMat getRotateCropImage(const cv::cuda::GpuMat &srcImage,
+                                    const std::vector<std::vector<int>> &box);
+
+void resizeOp(const cv::cuda::GpuMat &img, cv::cuda::GpuMat &resize_img,
+              float wh_ratio,
+              const std::array<int, 3> &rec_image_shape = {3, 48, 320});
+
+void normalizeOp(cv::cuda::GpuMat &im, const std::array<float, 3> &mean,
+                 const std::array<float, 3> &scale);
+
+void permute(cv::cuda::GpuMat &im);
+
+void permuteBatchOp(const std::vector<cv::cuda::GpuMat> &imgs,
+                    cv::cuda::GpuMat &dest);
 }  // namespace tensorrt_inference

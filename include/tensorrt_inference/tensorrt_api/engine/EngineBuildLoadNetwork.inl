@@ -216,6 +216,11 @@ bool Engine<T>::loadNetwork(std::string trtModelPath) {
                  it->second.dims.d[0], it->second.dims.d[1],
                  it->second.dims.d[2], it->second.dims.d[3]);
   }
+  for (auto it = input_map_.begin(); it != input_map_.end(); ++it) {
+    spdlog::info("Name {} : Input dimensions: ({}, {}, {}, {})", it->first,
+                 it->second.dims.d[0], it->second.dims.d[1],
+                 it->second.dims.d[2], it->second.dims.d[3]);
+  }
   // Synchronize and destroy the cuda stream
   Util::checkCudaErrorCode(cudaStreamSynchronize(stream));
   Util::checkCudaErrorCode(cudaStreamDestroy(stream));
@@ -356,7 +361,9 @@ bool Engine<T>::build(const std::string& onnxModelPath) {
                  inputName, inputC, inputH, inputW);
 
     haveDynamicDims_ = inputC == -1 || inputH == -1 || inputW == -1;
-
+    spdlog::info("Input name and dimensions of model: ({} : {}, {}, {})",
+                 m_options.OPT_DIMS_[0], m_options.OPT_DIMS_[1],
+                 m_options.OPT_DIMS_[2], m_options.OPT_DIMS_[3]);
     // Specify the optimization profile`
     if (haveDynamicDims_) {
       optProfile->setDimensions(
@@ -414,7 +421,6 @@ bool Engine<T>::build(const std::string& onnxModelPath) {
     //}
   }
   config->addOptimizationProfile(optProfile);
-
   // Set the precision level
   const auto engineName = serializeEngineOptions(m_options, onnxModelPath);
   if (m_options.precision == Precision::FP16) {

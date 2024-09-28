@@ -129,14 +129,20 @@ class Engine : public IEngine<T> {
   //                                        const std::array<float, 3> &divVals,
   //                                        bool normalize, bool swapRB =
   //                                        false);
-  // virtual uint32_t getMaxOutputLength(const nvinfer1::Dims &tensorShape)
-  // const;
+  virtual uint32_t getMaxOutputLength(const nvinfer1::Dims &tensorShape) const {
+    uint32_t outputLength = 1;
+    for (int j = 1; j < tensorShape.nbDims; ++j) {
+      // We ignore j = 0 because that is the batch size, and we will take that
+      // into account when sizing the buffer
+      outputLength *= tensorShape.d[j];
+    }
+    return outputLength;
+  }
 
  protected:
   const Options m_options;
   bool haveDynamicDims_;
 
- private:
   // Build the network
   bool build(const std::string &onnxModelPath);
 

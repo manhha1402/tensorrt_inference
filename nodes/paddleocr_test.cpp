@@ -33,27 +33,31 @@ int main(int argc, char *argv[]) {
   std::cout << "Saved annotated image to: " << outputName << std::endl;
   auto plates = tensorrt_inference::getCroppedObjects(img, objects, img.cols,
                                                       img.rows, false);
-  int i = 0;
+  int k = 0;
   for (const auto &plate : plates) {
-    cv::imwrite("cropped_" + std::to_string(i) + ".jpg", plate.croped_object);
-    i++;
+    cv::imwrite("cropped_" + std::to_string(k) + ".jpg", plate.croped_object);
+    k++;
   }
+
   const std::filesystem::path &model_dir =
       std::filesystem::path(std::getenv("HOME")) / "data" / "weights";
   const std::string model_name = "paddleocr";
-  tensorrt_inference::Options options;
-  options.MIN_DIMS_ = {1, 3, 48, 10};
-  options.OPT_DIMS_ = {1, 3, 48, 320};
-  options.MAX_DIMS_ = {8, 3, 48, 2000};
-  options.engine_file_dir = (model_dir / model_name).string();
-  auto rec =
-      std::make_shared<tensorrt_inference::PaddleOCR>(model_name, options);
+  tensorrt_inference::Options options_rec;
+  options_rec.MIN_DIMS_ = {1, 3, 48, 10};
+  options_rec.OPT_DIMS_ = {1, 3, 48, 320};
+  options_rec.MAX_DIMS_ = {8, 3, 48, 2000};
+  options_rec.engine_file_dir = (model_dir / model_name).string();
+  tensorrt_inference::Options options_det;
+  options_det.engine_file_dir = (model_dir / model_name).string();
+  auto paddle_ocr = std::make_shared<tensorrt_inference::PaddleOCR>(
+      model_name, options_det, options_rec, model_dir);
+  std::vector<cv::cuda::GpuMat> img_list;
   for (size_t i = 0; i < plates.size(); i++) {
-    cv::cuda::GpuMat image(plates[i].croped_object);
-
-    cv::cuda::GpuMat input = rec->preprocess(image);
-    std::unordered_map<std::string, std::vector<float>> feature_vectors;
-    rec->runInference(input, feature_vectors);
+    auto result = paddle_ocr->runInference(img, plates[i]);
+    plates[i].probability = result.second;
+    plates[i].label = result.first;
   }
+  cv::imshow("result", paddle_ocr->drawBBoxLabels(img, plates));
+  cv::waitKey(0);
   return 0;
 }
