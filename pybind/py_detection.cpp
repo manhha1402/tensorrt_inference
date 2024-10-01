@@ -9,8 +9,10 @@ using namespace py::literals;
 namespace tensorrt_inference {
 class PyDetection {
  public:
-  PyDetection(const std::string &model_name,
-              const std::string &model_dir = "") {
+  PyDetection(
+      const std::string &model_name,
+      tensorrt_inference::Options options = tensorrt_inference::Options(),
+      const std::string &model_dir = "") {
     std::filesystem::path model_path;
     if (model_dir.empty()) {
       model_path =
@@ -19,17 +21,17 @@ class PyDetection {
       model_path = std::filesystem::path(model_dir);
     }
     if (model_name.find("yolov8") != std::string::npos) {
-      detector_ =
-          std::make_unique<tensorrt_inference::YoloV8>(model_name, model_path);
+      detector_ = std::make_unique<tensorrt_inference::YoloV8>(
+          model_name, options, model_path);
     } else if (model_name.find("yolov9") != std::string::npos) {
-      detector_ =
-          std::make_unique<tensorrt_inference::YoloV9>(model_name, model_path);
+      detector_ = std::make_unique<tensorrt_inference::YoloV9>(
+          model_name, options, model_path);
     } else if (model_name.find("facedetector") != std::string::npos) {
-      detector_ = std::make_unique<tensorrt_inference::RetinaFace>(model_name,
-                                                                   model_path);
+      detector_ = std::make_unique<tensorrt_inference::RetinaFace>(
+          model_name, options, model_path);
     } else if (model_name.find("retinaface") != std::string::npos) {
-      detector_ = std::make_unique<tensorrt_inference::RetinaFace>(model_name,
-                                                                   model_path);
+      detector_ = std::make_unique<tensorrt_inference::RetinaFace>(
+          model_name, options, model_path);
     } else {
       throw std::runtime_error("unkown model");
     }
@@ -51,9 +53,41 @@ class PyDetection {
 };
 
 void pybind_detection(py::module &m) {
+  // Options
+
+  // Enum class binding for Precision
+  py::enum_<Precision>(m, "Precision")
+      .value("FP32", Precision::FP32)
+      .value("FP16", Precision::FP16)
+      .value("INT8", Precision::INT8)
+      .export_values();  // Exposes the enum values to Python
+
+  // Struct binding for Options
+  py::class_<Options>(m, "Options")
+      .def(py::init<>())  // Default constructor
+      .def_readwrite("precision", &Options::precision)
+      .def_readwrite("calibrationDataDirectoryPath",
+                     &Options::calibrationDataDirectoryPath)
+      .def_readwrite("calibrationBatchSize", &Options::calibrationBatchSize)
+      .def_readwrite("optBatchSize", &Options::optBatchSize)
+      .def_readwrite("maxBatchSize", &Options::maxBatchSize)
+      .def_readwrite("deviceIndex", &Options::deviceIndex)
+      .def_readwrite("engine_file_dir", &Options::engine_file_dir)
+      .def_readwrite("maxInputWidth", &Options::maxInputWidth)
+      .def_readwrite("minInputWidth", &Options::minInputWidth)
+      .def_readwrite("optInputWidth", &Options::optInputWidth)
+      .def_readwrite("MIN_DIMS_", &Options::MIN_DIMS_)
+      .def_readwrite("OPT_DIMS_", &Options::OPT_DIMS_)
+      .def_readwrite("MAX_DIMS_", &Options::MAX_DIMS_);
+
   m.doc() = "Tensorrt Inference";
   py::class_<PyDetection>(m, "Detection")
-      .def(py::init<const std::string, const std::string &>())
+      .def(py::init<const std::string, const tensorrt_inference::Options &,
+                    const std::string &>(),
+           py::arg("model_name"),
+           py::arg("options") =
+               tensorrt_inference::Options(),  // Default argument
+           py::arg("model_dir") = "")
       .def("detect", &PyDetection::detect, "image"_a, "params"_a, "params"_a)
       .def("draw", &PyDetection::drawObjectLabels, "image"_a, "objects"_a,
            "params"_a, "scale"_a);

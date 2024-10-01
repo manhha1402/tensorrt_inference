@@ -3,8 +3,8 @@
 message(STATUS "Build Python binding enable!")
 set(PYSRCS ndarray_converter.cpp
            py_tensorrt_inference.cpp
-           #py_yolov8.cpp
            py_detection.cpp
+           py_model.cpp
            )
 
 pybind11_add_module(tensorrt_inference_py ${PYSRCS})
@@ -31,3 +31,4 @@ install(TARGETS tensorrt_inference_py
 
 install(FILES "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/pybind/tensorrt_inference/__init__.py"
         DESTINATION "${CMAKE_INSTALL_PREFIX}/tensorrt_inference/lib/pybind/tensorrt_inference")
+#sudo ln -s /usr/lib/python3.10/site-packages/numpy/core/include/numpy /usr/include/numpy

@@ -26,17 +26,6 @@ Model::Model(const std::string &model_name, tensorrt_inference::Options options,
   }
   // Specify options for GPU inference
   options.engine_file_dir = getFolderOfFile(onnx_file_);
-  /*
-  options.precision = config.precision;
-  options.calibrationDataDirectoryPath = config.calibrationDataDirectory;
-
-  if (options.precision == Precision::INT8) {
-      if (options.calibrationDataDirectoryPath.empty()) {
-          throw std::runtime_error("Error: Must supply calibration data path for
-  INT8 calibration");
-      }
-  }
-  */
   m_trtEngine = std::make_unique<Engine<float>>(options);
   auto succ = m_trtEngine->buildLoadNetwork(onnx_file_);
   if (!succ) {

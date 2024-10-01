@@ -34,6 +34,7 @@ inline std::vector<CroppedObject> getCroppedObjects(
     }
 
     curr_object.rect = object.rect;
+    curr_object.det_score = object.probability;
     cropped_objects.push_back(curr_object);
   }
   return cropped_objects;

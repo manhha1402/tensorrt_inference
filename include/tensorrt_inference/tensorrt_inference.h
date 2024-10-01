@@ -1,5 +1,5 @@
 #pragma once
-#include "tensorrt_inference/arcface.h"
+#include "tensorrt_inference/face_recognition.h"
 #include "tensorrt_inference/paddle_ocr/paddleocr.h"
 #include "tensorrt_inference/retinaface.h"
 #include "tensorrt_inference/yolov8.h"

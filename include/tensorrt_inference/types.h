@@ -43,10 +43,12 @@ struct Object {
   std::vector<cv::Point2f> landmarks{};
 };
 struct CroppedObject {
-  double probability;
+  double det_score;
+  double rec_score;
   std::string label;
   cv::Rect rect;
   cv::Mat croped_object;
+  cv::Mat original_image;
 };
 
 }  // namespace tensorrt_inference

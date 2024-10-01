@@ -194,7 +194,6 @@ bool Engine<T>::loadNetwork(std::string trtModelPath) {
           tensor_length *= tensorShape.d[j];
         }
       }
-      std::cout << "tensor_length: " << tensor_length << std::endl;
       // Now size the output buffer appropriately, taking into account the max
       // possible batch size (although we could actually end up using less
       // memory)

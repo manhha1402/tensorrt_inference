@@ -54,13 +54,8 @@ class TextRecognition : public Engine<float> {
  protected:
   std::string onnx_file_;
 
-  std::vector<float> sub_vals_{0, 0, 0};
-  std::vector<float> div_vals_{1.0f, 1.0f, 1.0f};
-
   std::array<float, 3> mean_ = {0.5f, 0.5f, 0.5f};
   std::array<float, 3> scale_ = {1 / 0.5f, 1 / 0.5f, 1 / 0.5f};
-  bool normalized_ = false;
-  bool swapBR_ = true;
   int rec_batch_num_ = 6;
 };
 

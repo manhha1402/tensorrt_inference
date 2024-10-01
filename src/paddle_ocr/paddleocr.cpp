@@ -147,20 +147,6 @@ TextRecognition::TextRecognition(const std::string& model_name,
 
   onnx_file_ =
       (model_dir / model_name / config["onnx_file"].as<std::string>()).string();
-  std::cout << onnx_file_ << std::endl;
-
-  if (config["normalized"]) {
-    normalized_ = config["normalized"].as<bool>();
-  }
-  if (config["swapBR"]) {
-    swapBR_ = config["swapBR"].as<bool>();
-  }
-  if (config["sub_vals"]) {
-    sub_vals_ = config["sub_vals"].as<std::vector<float>>();
-  }
-  if (config["div_vals"]) {
-    div_vals_ = config["div_vals"].as<std::vector<float>>();
-  }
 
   if (config["labels_file"]) {
     std::string labels_file =
@@ -366,6 +352,7 @@ cv::Mat PaddleOCR::drawBBoxLabels(const cv::Mat& image,
                                   const std::vector<CroppedObject>& objects,
                                   unsigned int scale) {
   cv::Mat result = image.clone();
+  cv::Point textPosition(10, 30);
   for (const auto& object : objects) {
     cv::Scalar color = cv::Scalar(0, 255, 0);
     float meanColor = cv::mean(color)[0];
@@ -378,7 +365,7 @@ cv::Mat PaddleOCR::drawBBoxLabels(const cv::Mat& image,
     const auto& rect = object.rect;
     // Draw rectangles and text
     char text[256];
-    sprintf(text, "%s %.1f%%", object.label.c_str(), object.probability * 100);
+    sprintf(text, "%s %.1f%%", object.label.c_str(), object.det_score * 100);
 
     int baseLine = 0;
     cv::Size labelSize = cv::getTextSize(text, cv::FONT_HERSHEY_SIMPLEX,
@@ -399,6 +386,10 @@ cv::Mat PaddleOCR::drawBBoxLabels(const cv::Mat& image,
 
     cv::putText(result, text, cv::Point(x, y + labelSize.height),
                 cv::FONT_HERSHEY_SIMPLEX, 0.35 * scale, txtColor, scale);
+    cv::putText(result, text, textPosition, cv::FONT_HERSHEY_SIMPLEX, scale,
+                txtColor, scale);
+
+    textPosition = cv::Point2f(textPosition.x + 10, textPosition.y);
   }
   return result;
 }

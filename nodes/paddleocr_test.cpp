@@ -15,10 +15,11 @@ int main(int argc, char *argv[]) {
     return -1;
   }
   std::shared_ptr<tensorrt_inference::Detection> detection;
-  detection = std::make_shared<tensorrt_inference::YoloV8>("plate_detection");
+  detection =
+      std::make_shared<tensorrt_inference::YoloV8>("plate_yolov8n_320_2024");
 
   // Run inference
-  tensorrt_inference::DetectionParams params(0.5, 0.5, 0.5, 0.5, 20);
+  tensorrt_inference::DetectionParams params(0.3, 0.5, 0.5, 0.5, 20);
   std::vector<std::string> detected_classes{"all"};
   const auto objects = detection->detect(img, params, detected_classes);
   std::cout << "Detected " << objects.size() << " objects" << std::endl;
@@ -27,7 +28,7 @@ int main(int argc, char *argv[]) {
   auto result = detection->drawObjectLabels(img, objects);
 
   // Save the image to disk
-  const auto outputName =
+  auto outputName =
       inputImage.substr(0, inputImage.find_last_of('.')) + "_annotated.jpg";
   cv::imwrite(outputName, result);
   std::cout << "Saved annotated image to: " << outputName << std::endl;
@@ -54,10 +55,28 @@ int main(int argc, char *argv[]) {
   std::vector<cv::cuda::GpuMat> img_list;
   for (size_t i = 0; i < plates.size(); i++) {
     auto result = paddle_ocr->runInference(img, plates[i]);
-    plates[i].probability = result.second;
+    plates[i].rec_score = result.second;
     plates[i].label = result.first;
+    std::cout << result.first << std::endl;
+    std::cout << "detection score: " << result.second << std::endl;
+    std::cout << "recognition score: " << plates[i].det_score << std::endl;
   }
-  cv::imshow("result", paddle_ocr->drawBBoxLabels(img, plates));
-  cv::waitKey(0);
+  plates.erase(
+      std::remove_if(plates.begin(), plates.end(),
+                     [&](const tensorrt_inference::CroppedObject &plate) {
+                       return plate.rec_score < 0.8;
+                     }),
+      plates.end());
+  if (!plates.empty()) {
+    cv::Mat rec = paddle_ocr->drawBBoxLabels(img, plates, 1);
+    cv::imshow("result", rec);
+    cv::waitKey(0);
+    outputName =
+        inputImage.substr(0, inputImage.find_last_of('.')) + "_rec.jpg";
+    cv::imwrite(outputName, rec);
+  } else {
+    std::cout << "no detection" << std::endl;
+  }
+
   return 0;
 }

@@ -17,7 +17,7 @@ if (ENABLE_BENCHMARKS)
 endif()
 # For finding FindTensorRT.cmake
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
-option(BUILD_PYTHON_BINDING "Build Python binding" OFF)
+option(BUILD_PYTHON_BINDING "Build Python binding" ON)
 
 
 #OpenMP
@@ -50,7 +50,7 @@ add_library(${PROJECT_NAME}_lib SHARED
                 src/yolov8.cpp
                 src/yolov9.cpp
                 src/retinaface.cpp
-                src/arcface.cpp
+                src/face_recognition.cpp
                 src/paddle_ocr/clipper.cpp
                 src/paddle_ocr/paddleocr_utils.cpp
                 src/paddle_ocr/paddleocr.cpp
@@ -91,8 +91,8 @@ add_executable(paddleocr_test nodes/paddleocr_test.cpp)
 target_link_libraries(paddleocr_test ${PROJECT_NAME}_lib)
 
 
-add_executable(arcface_test nodes/arcface_test.cpp)
-target_link_libraries(arcface_test ${PROJECT_NAME}_lib)
+add_executable(face_rec_test nodes/face_rec_test.cpp)
+target_link_libraries(face_rec_test ${PROJECT_NAME}_lib)
 
 ##########
 # EXPORT #
@@ -109,7 +109,7 @@ install(
 )
 
 install(
-  TARGETS arcface_test detection_test paddleocr_test
+  TARGETS face_rec_test detection_test paddleocr_test
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
 )
 

@@ -6,13 +6,10 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-namespace tensorrt_inference
-{
-    namespace py = pybind11;
+namespace tensorrt_inference {
+namespace py = pybind11;
 
-    void pybind_detection(py::module &m);
-    // void pybind_yolov9(py::module& m);
-    // void pybind_retinaface(py::module& m);
-    // void pybind_arcface(py::module& m);
+void pybind_detection(py::module& m);
+void pybind_model(py::module& m);
 
-} // namespace tensorrt_inference
+}  // namespace tensorrt_inference

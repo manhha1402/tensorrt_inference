@@ -1,35 +1,69 @@
-# import cv2
-# import tensorrt_inference_py
-# from pathlib import Path
-# img_file = Path.home() / "data" / "test_images" / "image2.png"
-# image =cv2.imread(img_file.as_posix())
-# detector = tensorrt_inference_py.detection.Detection("facedetector","")
-# params = tensorrt_inference_py.detection.DetectionParams()
+import cv2
+import tensorrt_inference_py
+from pathlib import Path
+from facenet_pytorch import MTCNN, InceptionResnetV1
+import torch
+from torch.utils.data import DataLoader
+from torchvision import datasets
+import numpy as np
+import pandas as pd
+import os
+
+# from deepface import DeepFace
+
+img_file1 = Path.home() / "data" / "test_images" / "david1.jpg"
+img_file2 = Path.home() / "data" / "test_images" / "david2.jpg"
+
+image1 =cv2.imread(img_file1.as_posix())
+image2 =cv2.imread(img_file2.as_posix())
+
+detector = tensorrt_inference_py.detection.Detection("facedetector")
+params = tensorrt_inference_py.detection.DetectionParams()
 # rect = tensorrt_inference_py.detection.Rect()
+objects1 = detector.detect(image1,params,['face'])
+objects2 = detector.detect(image2,params,['face'])
 
-
-# objects = detector.detect(image,params,['face'])
-# print(len(objects))
-# image1 = detector.draw(image,objects,params,2)
+# image1 = detector.draw(image,objects,params,1)
 # cv2.imwrite("result.png",image1)
-# # import yaml
+# print(objects[0].rect)
+cropped_image1 = image1[objects1[0].rect.y:objects1[0].rect.y+objects1[0].rect.height, objects1[0].rect.x:objects1[0].rect.x+objects1[0].rect.width]
+cropped_image2 = image2[objects2[0].rect.y:objects2[0].rect.y+objects2[0].rect.height, objects2[0].rect.x:objects2[0].rect.x+objects2[0].rect.width]
+
+#cv2.imwrite("cropped_image.png",cropped_image)
+facenet = tensorrt_inference_py.model.Model("FaceNet_vggface2_optmized")
+embedding1 = facenet.get_embedding(cropped_image1)
+embedding2 = facenet.get_embedding(cropped_image2)
+
+C = np.matmul(embedding1.transpose(), embedding2)  # Or A @ B
+print(C)
 
 
 
-# import yaml
-# def convert_txt_to_yaml(txt_file, yaml_file):
 
-#     with open(txt_file, 'r', encoding='utf-8') as file:
-#         lines = file.readlines()
 
-#     # Create a dictionary with index numbers as keys
-#     data = {i+1: line.strip() for i, line in enumerate(lines) if line.strip()}
 
-#     # Write the dictionary to a YAML file without quotes
-#     with open(yaml_file, 'w', encoding='utf-8') as yaml_out:
-#         yaml.dump(data, yaml_out, allow_unicode=True, default_style=None)
 
-# # Example usage
-# convert_txt_to_yaml('/home/neura_ai/data/weights/paddleocr/ppocr_keys_v1.txt', '/home/neura_ai/data/weights/paddleocr/output.yaml')
 
-# print("Conversion complete! Check the 'output.yaml' file.")
+
+
+
+
+# import cv2
+
+# stream_url = "rtsp://admin:namtiep2005@192.168.1.125:554/Streaming/Channels/101"
+# cap = cv2.VideoCapture(stream_url)
+
+# while True:
+#     ret, frame = cap.read()
+#     print(frame.shape)
+#     if ret:
+#         cv2.imshow('Hikvision Stream', frame)
+#         if cv2.waitKey(1) & 0xFF == ord('q'):
+#             break
+#     else:
+#         break
+
+# cap.release()
+# cv2.destroyAllWindows()
+
+
