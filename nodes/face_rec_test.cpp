@@ -35,9 +35,9 @@ int main(int argc, char *argv[]) {
   const int w = face_rec.m_trtEngine->getInputInfo().begin()->second.dims.d[3];
 
   auto cropped_faces1 =
-      tensorrt_inference::getCroppedObjects(img1, faces1, w, h);
+      tensorrt_inference::getCroppedObjects(img1, faces1, w, h, false);
   auto cropped_faces2 =
-      tensorrt_inference::getCroppedObjects(img2, faces2, w, h);
+      tensorrt_inference::getCroppedObjects(img2, faces2, w, h, false);
 
   cv::imwrite("crop_face1.png", cropped_faces1[0].croped_object);
   cv::imwrite("crop_face2.png", cropped_faces2[0].croped_object);

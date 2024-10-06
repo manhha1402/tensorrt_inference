@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
                      }),
       plates.end());
   if (!plates.empty()) {
-    cv::Mat rec = paddle_ocr->drawBBoxLabels(img, plates, 1);
+    cv::Mat rec = tensorrt_inference::drawBBoxLabels(img, plates, 1);
     cv::imshow("result", rec);
     cv::waitKey(0);
     outputName =

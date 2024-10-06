@@ -2,6 +2,47 @@
 
 namespace tensorrt_inference {
 
+cv::Mat drawBBoxLabels(const cv::Mat& image,
+                       const std::vector<CroppedObject>& objects,
+                       unsigned int scale) {
+  cv::Mat result = image.clone();
+  for (const auto& object : objects) {
+    cv::Scalar color = cv::Scalar(0, 255, 0);
+    float meanColor = cv::mean(color)[0];
+    cv::Scalar txtColor;
+    if (meanColor > 0.5) {
+      txtColor = cv::Scalar(0, 0, 0);
+    } else {
+      txtColor = cv::Scalar(255, 255, 255);
+    }
+    const auto& rect = object.rect;
+    // Draw rectangles and text
+    char text[256];
+    sprintf(text, "%s %.1f%%", object.label.c_str(), object.det_score * 100);
+
+    int baseLine = 0;
+    cv::Size labelSize = cv::getTextSize(text, cv::FONT_HERSHEY_SIMPLEX,
+                                         0.35 * scale, scale, &baseLine);
+
+    cv::Scalar txt_bk_color = color * 0.7 * 255;
+
+    int x = object.rect.x;
+    int y = object.rect.y + 1;
+
+    cv::rectangle(result, rect, color * 255, scale + 1);
+
+    cv::rectangle(
+        result,
+        cv::Rect(cv::Point(x, y),
+                 cv::Size(labelSize.width, labelSize.height + baseLine)),
+        txt_bk_color, -1);
+
+    cv::putText(result, text, cv::Point(x, y + labelSize.height),
+                cv::FONT_HERSHEY_SIMPLEX, 0.35 * scale, txtColor, scale);
+  }
+  return result;
+}
+
 // refenrence:
 // https://pyimagesearch.com/2014/08/25/4-point-opencv-getperspective-transform-example/
 cv::cuda::GpuMat getRotateCropImage(const cv::cuda::GpuMat& srcImage,

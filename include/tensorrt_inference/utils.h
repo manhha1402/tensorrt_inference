@@ -27,8 +27,9 @@ inline std::vector<CroppedObject> getCroppedObjects(
     cv::Mat tempCrop = frame(object.rect);
     CroppedObject curr_object;
     if (resize) {
+      // resize to network dimension input
       cv::resize(tempCrop, curr_object.croped_object, cv::Size(w, h), 0, 0,
-                 cv::INTER_CUBIC);  // resize to network dimension input
+                 cv::INTER_CUBIC);
     } else {
       curr_object.croped_object = tempCrop;
     }
@@ -39,6 +40,10 @@ inline std::vector<CroppedObject> getCroppedObjects(
   }
   return cropped_objects;
 }
+
+cv::Mat drawBBoxLabels(const cv::Mat &image,
+                       const std::vector<CroppedObject> &objects,
+                       unsigned int scale);
 
 // refenrence:
 // https://pyimagesearch.com/2014/08/25/4-point-opencv-getperspective-transform-example/

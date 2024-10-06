@@ -29,14 +29,17 @@ objects2 = detector.detect(image2,params,['face'])
 cropped_image1 = image1[objects1[0].rect.y:objects1[0].rect.y+objects1[0].rect.height, objects1[0].rect.x:objects1[0].rect.x+objects1[0].rect.width]
 cropped_image2 = image2[objects2[0].rect.y:objects2[0].rect.y+objects2[0].rect.height, objects2[0].rect.x:objects2[0].rect.x+objects2[0].rect.width]
 
-#cv2.imwrite("cropped_image.png",cropped_image)
+cv2.imwrite("cropped_image1.png",cropped_image1)
+cv2.imwrite("cropped_image2.png",cropped_image2)
 facenet = tensorrt_inference_py.model.Model("FaceNet_vggface2_optmized")
 embedding1 = facenet.get_embedding(cropped_image1)
 embedding2 = facenet.get_embedding(cropped_image2)
 
 C = np.matmul(embedding1.transpose(), embedding2)  # Or A @ B
-print(C)
+D = embedding1.transpose() @ embedding2  # Or A @ B
 
+print(C)
+print(D)
 
 
 
