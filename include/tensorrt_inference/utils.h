@@ -31,9 +31,8 @@ inline std::vector<CroppedObject> getCroppedObjects(
       cv::resize(tempCrop, curr_object.croped_object, cv::Size(w, h), 0, 0,
                  cv::INTER_CUBIC);
     } else {
-      curr_object.croped_object = tempCrop;
+      curr_object.croped_object = std::move(tempCrop);
     }
-
     curr_object.rect = object.rect;
     curr_object.det_score = object.probability;
     cropped_objects.push_back(curr_object);
@@ -43,7 +42,7 @@ inline std::vector<CroppedObject> getCroppedObjects(
 
 cv::Mat drawBBoxLabels(const cv::Mat &image,
                        const std::vector<CroppedObject> &objects,
-                       unsigned int scale);
+                       unsigned int scale, bool show_rec = false);
 
 // refenrence:
 // https://pyimagesearch.com/2014/08/25/4-point-opencv-getperspective-transform-example/

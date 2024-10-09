@@ -4,7 +4,7 @@ namespace tensorrt_inference {
 
 cv::Mat drawBBoxLabels(const cv::Mat& image,
                        const std::vector<CroppedObject>& objects,
-                       unsigned int scale) {
+                       unsigned int scale, bool show_rec) {
   cv::Mat result = image.clone();
   for (const auto& object : objects) {
     cv::Scalar color = cv::Scalar(0, 255, 0);
@@ -18,7 +18,11 @@ cv::Mat drawBBoxLabels(const cv::Mat& image,
     const auto& rect = object.rect;
     // Draw rectangles and text
     char text[256];
-    sprintf(text, "%s %.1f%%", object.label.c_str(), object.det_score * 100);
+    if (show_rec) {
+      sprintf(text, "%s %.1f%%", object.label.c_str(), object.rec_score * 100);
+    } else {
+      sprintf(text, "%s %.1f%%", object.label.c_str(), object.det_score * 100);
+    }
 
     int baseLine = 0;
     cv::Size labelSize = cv::getTextSize(text, cv::FONT_HERSHEY_SIMPLEX,

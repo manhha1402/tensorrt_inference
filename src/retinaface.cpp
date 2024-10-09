@@ -65,10 +65,14 @@ std::vector<Object> RetinaFace::postprocess(
       rect.y = std::clamp(y * m_ratio, 0.f, input_frame_h_);
       rect.width = width * m_ratio;
       rect.height = height * m_ratio;
-      bboxes.push_back(rect);
-      scores.push_back(conf[i * 2 + 1]);
-      // face_lmks.push_back(kps);
-      labels.push_back(1);
+      if (0 <= rect.x && 0 <= rect.width &&
+          rect.x + rect.width <= input_frame_w_ && 0 <= rect.y &&
+          0 <= rect.height && rect.y + rect.height <= input_frame_h_) {
+        bboxes.push_back(rect);
+        scores.push_back(conf[i * 2 + 1]);
+        // face_lmks.push_back(kps);
+        labels.push_back(1);
+      }
     }
   }
   cv::dnn::NMSBoxesBatched(bboxes, scores, labels, params.obj_threshold,
