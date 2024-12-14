@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <variant>
 #include <opencv2/core/cuda.hpp>
 #include <vector>
 
@@ -11,17 +12,17 @@ struct NetInfo {
   void *buffer;
   nvinfer1::Dims dims;
   size_t tensor_length = 0;
+  nvinfer1::DataType data_type;
 };
 
-template <typename T>
 class IEngine {
  public:
   virtual ~IEngine() = default;
   virtual bool buildLoadNetwork(const std::string &onnx_file) = 0;
   virtual bool loadNetwork(std::string trtModelPath) = 0;
-  virtual bool runInference(
-      cv::cuda::GpuMat &input,
-      std::unordered_map<std::string, std::vector<T>> &featureVectors) = 0;
+//   virtual bool runInference(
+//       cv::cuda::GpuMat &input,
+//       std::unordered_map<std::string, std::vector<FeatureType>> &featureVectors) = 0;
   virtual const std::unordered_map<std::string, NetInfo> &getInputInfo()
       const = 0;
   virtual const std::unordered_map<std::string, NetInfo> &getOutputInfo()

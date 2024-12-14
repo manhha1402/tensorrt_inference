@@ -26,7 +26,7 @@ Model::Model(const std::string &model_name, tensorrt_inference::Options options,
   }
   // Specify options for GPU inference
   options.engine_file_dir = getFolderOfFile(onnx_file_);
-  m_trtEngine = std::make_unique<Engine<float>>(options);
+  m_trtEngine = std::make_unique<Engine>(options);
   auto succ = m_trtEngine->buildLoadNetwork(onnx_file_);
   if (!succ) {
     const std::string errMsg =
@@ -57,7 +57,7 @@ cv::cuda::GpuMat Model::preprocess(const cv::cuda::GpuMat &gpuImg) {
   if (resized.rows != input_info->second.dims.d[2] ||
       resized.cols != input_info->second.dims.d[3]) {
     // Only resize if not already the right size to avoid unecessary copy
-    resized = Engine<float>::resizeKeepAspectRatioPadRightBottom(
+    resized = Engine::resizeKeepAspectRatioPadRightBottom(
         rgbMat, input_info->second.dims.d[2], input_info->second.dims.d[3],
         cv::Scalar(128, 128, 128));
   }
@@ -107,11 +107,22 @@ bool Model::doInference(
   auto gpu_input = preprocess(gpuImg);
   auto succ = m_trtEngine->runInference(gpu_input, feature_vectors);
   if (!succ) {
-    std::string msg = "Error: Unable to run inference.";
-    spdlog::error(msg);
+    spdlog::error("Error: Unable to run inference.");
     return false;
   }
   return true;
 }
 
+bool Model::doInference(
+    cv::cuda::GpuMat &gpuImg,
+    std::unordered_map<std::string, std::vector<float>> &feature_f_vectors,
+      std::unordered_map<std::string, std::vector<int32_t>> &feature_int_vectors) {
+  auto gpu_input = preprocess(gpuImg);
+  auto succ = m_trtEngine->runInference(gpu_input, feature_f_vectors,feature_int_vectors);
+  if (!succ) {
+    spdlog::error("Error: Unable to run inference.");
+    return false;
+  }
+  return true;
+}
 }  // namespace tensorrt_inference

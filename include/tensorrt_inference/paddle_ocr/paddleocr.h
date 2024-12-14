@@ -10,7 +10,7 @@
 #include "tensorrt_inference/utils.h"
 namespace tensorrt_inference {
 
-class TextDetection : public Engine<float> {
+class TextDetection : public Engine {
  public:
   explicit TextDetection(
       const std::string &model_name,
@@ -33,7 +33,7 @@ class TextDetection : public Engine<float> {
   bool use_polygon_score_ = false;
 };
 
-class TextRecognition : public Engine<float> {
+class TextRecognition : public Engine {
  public:
   explicit TextRecognition(
       const std::string &model_name,

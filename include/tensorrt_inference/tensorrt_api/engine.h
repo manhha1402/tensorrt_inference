@@ -12,12 +12,15 @@
 #include <opencv2/opencv.hpp>
 
 #include "NvOnnxParser.h"
+#include "NvInfer.h"
+#include "NvInferPlugin.h"
 #include "macros.h"
 #include "tensorrt_inference/tensorrt_api/Int8Calibrator.h"
-#include "tensorrt_inference/tensorrt_api/interfaces/IEngine.h"
 #include "tensorrt_inference/tensorrt_api/logger.h"
 #include "tensorrt_inference/tensorrt_api/util/Stopwatch.h"
 #include "tensorrt_inference/tensorrt_api/util/Util.h"
+#include <variant>
+
 namespace tensorrt_inference {
 // Precision used for GPU inference
 enum class Precision {
@@ -67,16 +70,21 @@ struct Options {
 class Logger : public nvinfer1::ILogger {
   void log(Severity severity, const char *msg) noexcept override;
 };
+struct NetInfo {
+  void *buffer;
+  nvinfer1::Dims dims;
+  size_t tensor_length = 0;
+  nvinfer1::DataType data_type;
+};
 
-template <typename T>
-class Engine : public IEngine<T> {
+class Engine {
  public:
   Engine(const Options &options);
   ~Engine();
 
   // Build the onnx model into a TensorRT engine file, cache the model to disk
   // (to avoid rebuilding in future), and then load the model into memory.
-  bool buildLoadNetwork(const std::string &onnx_file) override;
+  bool buildLoadNetwork(const std::string &onnx_file);
 
   // Load a TensorRT engine file from disk into memory
   // The default implementation will normalize values between [0.f, 1.f]
@@ -84,14 +92,20 @@ class Engine : public IEngine<T> {
   // (some converted models may require this). If the model requires values to
   // be normalized between [-1.f, 1.f], use the following params:
 
-  bool loadNetwork(const std::string engile_file) override;
+  bool loadNetwork(const std::string engile_file);
 
   // Run inference.
   // Input format [input][batch][cv::cuda::GpuMat]
   // Output format [batch][output][feature_vector]
-  bool runInference(cv::cuda::GpuMat &inputs,
-                    std::unordered_map<std::string, std::vector<T>>
-                        &feature_vectors) override;
+  bool runInference(
+      cv::cuda::GpuMat &input,
+      std::unordered_map<std::string, std::vector<float>> &feature_vectors);
+  bool runInference(
+      cv::cuda::GpuMat &input,
+      std::unordered_map<std::string, std::vector<float>> &feature_f_vectors,
+      std::unordered_map<std::string, std::vector<int32_t>> &feature_int_vectors);
+
+
 
   // Utility method for resizing an image while maintaining the aspect ratio by
   // adding padding to smaller dimension after scaling While letterbox padding
@@ -104,25 +118,25 @@ class Engine : public IEngine<T> {
       const cv::Scalar &bgcolor = cv::Scalar(0, 0, 0));
 
   [[nodiscard]] const std::unordered_map<std::string, NetInfo> &getInputInfo()
-      const override {
+      const  {
     return input_map_;
   };
   [[nodiscard]] const std::unordered_map<std::string, NetInfo> &getOutputInfo()
-      const override {
+      const {
     return output_map_;
   };
 
   // Utility method for transforming triple nested output array into 2D array
   // Should be used when the output batch size is 1, but there are multiple
   // output feature vectors
-  static void transformOutput(std::vector<std::vector<std::vector<T>>> &input,
-                              std::vector<std::vector<T>> &output);
+  // static void transformOutput(std::vector<std::vector<std::vector<T>>> &input,
+  //                             std::vector<std::vector<T>> &output);
 
-  // Utility method for transforming triple nested output array into single
-  // array Should be used when the output batch size is 1, and there is only a
-  // single output feature vector
-  static void transformOutput(std::vector<std::vector<std::vector<T>>> &input,
-                              std::vector<T> &output);
+  // // Utility method for transforming triple nested output array into single
+  // // array Should be used when the output batch size is 1, and there is only a
+  // // single output feature vector
+  // static void transformOutput(std::vector<std::vector<std::vector<T>>> &input,
+  //                             std::vector<T> &output);
   // Convert NHWC to NCHW and apply scaling and mean subtraction
   // static cv::cuda::GpuMat blobFromGpuMats(const std::vector<cv::cuda::GpuMat>
   // &batchInput, const std::array<float, 3> &subVals,
@@ -155,11 +169,6 @@ class Engine : public IEngine<T> {
   void clearGpuBuffers();
 
   // Holds pointers to the input and output GPU buffers
-  // std::vector<void *> m_buffers;
-  // std::vector<nvinfer1::Dims> m_inputDims;
-  // std::vector<nvinfer1::Dims> m_outputDims;
-  // std::vector<std::string> output_tensor_names_;
-  // std::vector<std::string> input_tensor_names_;
   std::unordered_map<std::string, NetInfo> input_map_;
   std::unordered_map<std::string, NetInfo> output_map_;
 
@@ -172,16 +181,5 @@ class Engine : public IEngine<T> {
   Logger m_logger;
 };
 
-template <typename T>
-Engine<T>::Engine(const Options &options) : m_options(options) {}
-
-template <typename T>
-Engine<T>::~Engine() {
-  clearGpuBuffers();
-}
 
 }  // namespace tensorrt_inference
-// Include inline implementations
-#include "engine/EngineBuildLoadNetwork.inl"
-#include "engine/EngineRunInference.inl"
-#include "engine/EngineUtilities.inl"

@@ -5,8 +5,7 @@
 
 #include "tensorrt_inference/tensorrt_api/util/Util.h"
 namespace tensorrt_inference {
-template <typename T>
-bool Engine<T>::buildLoadNetwork(const std::string& onnx_file) {
+bool Engine::buildLoadNetwork(const std::string& onnx_file) {
   // get engine name
   const auto engine_name = serializeEngineOptions(m_options, onnx_file);
   // get engine directory
@@ -39,8 +38,7 @@ bool Engine<T>::buildLoadNetwork(const std::string& onnx_file) {
   return loadNetwork(engine_path);
 }
 
-template <typename T>
-bool Engine<T>::loadNetwork(std::string trtModelPath) {
+bool Engine::loadNetwork(std::string trtModelPath) {
   // Read the serialized model from disk
   if (!Util::doesFileExist(trtModelPath)) {
     auto msg = "Error, unable to read TensorRT model at path: " + trtModelPath;
@@ -115,73 +113,16 @@ bool Engine<T>::loadNetwork(std::string trtModelPath) {
     const auto tensorDataType = m_engine->getTensorDataType(tensorName);
     spdlog::info(tensorName);
     if (tensorType == nvinfer1::TensorIOMode::kINPUT) {
-      // The implementation currently only supports inputs of type float
-      if (m_engine->getTensorDataType(tensorName) !=
-          nvinfer1::DataType::kFLOAT) {
-        auto msg =
-            "Error, the implementation currently only supports float inputs";
-        spdlog::error(msg);
-        throw std::runtime_error(msg);
-      }
       // Store the input dims for later use
       input_map_[tensorName].dims = tensorShape;
+      input_map_[tensorName].data_type = tensorDataType;
       // input_map_[tensorName].tensor_length = tensor_length;
       // Util::checkCudaErrorCode(cudaMallocAsync(
       //     &input_map_[tensorName].buffer, tensor_length * sizeof(T),
       //     stream));
 
     } else if (tensorType == nvinfer1::TensorIOMode::kOUTPUT) {
-      // Ensure the model output data type matches the template argument
-      // specified by the user
-      if (tensorDataType == nvinfer1::DataType::kFLOAT &&
-          !std::is_same<float, T>::value) {
-        auto msg =
-            "Error, the model has expected output of type float. Engine class "
-            "template parameter must be adjusted.";
-        spdlog::error(msg);
-        throw std::runtime_error(msg);
-      } else if (tensorDataType == nvinfer1::DataType::kHALF &&
-                 !std::is_same<__half, T>::value) {
-        auto msg =
-            "Error, the model has expected output of type __half. Engine class "
-            "template parameter must be adjusted.";
-        spdlog::error(msg);
-        throw std::runtime_error(msg);
-      } else if (tensorDataType == nvinfer1::DataType::kINT8 &&
-                 !std::is_same<int8_t, T>::value) {
-        auto msg =
-            "Error, the model has expected output of type int8_t. Engine class "
-            "template parameter must be adjusted.";
-        spdlog::error(msg);
-        throw std::runtime_error(msg);
-      } else if (tensorDataType == nvinfer1::DataType::kINT32 &&
-                 !std::is_same<int32_t, T>::value) {
-        auto msg =
-            "Error, the model has expected output of type int32_t. Engine "
-            "class template parameter must be adjusted.";
-        spdlog::error(msg);
-        throw std::runtime_error(msg);
-      } else if (tensorDataType == nvinfer1::DataType::kBOOL &&
-                 !std::is_same<bool, T>::value) {
-        auto msg =
-            "Error, the model has expected output of type bool. Engine class "
-            "template parameter must be adjusted.";
-        spdlog::error(msg);
-        throw std::runtime_error(msg);
-      } else if (tensorDataType == nvinfer1::DataType::kUINT8 &&
-                 !std::is_same<uint8_t, T>::value) {
-        auto msg =
-            "Error, the model has expected output of type uint8_t. Engine "
-            "class template parameter must be adjusted.";
-        spdlog::error(msg);
-        throw std::runtime_error(msg);
-      } else if (tensorDataType == nvinfer1::DataType::kFP8) {
-        auto msg =
-            "Error, the model has expected output of type kFP8. This is not "
-            "supported by the Engine class.";
-        spdlog::error(msg);
-        throw std::runtime_error(msg);
-      }
+      
       // The binding is an output
       uint32_t tensor_length = 1;
       haveDynamicDims_ = tensorShape.d[1] == -1 || tensorShape.d[2] == -1 ||
@@ -200,8 +141,10 @@ bool Engine<T>::loadNetwork(std::string trtModelPath) {
       // memory)
       output_map_[tensorName].dims = tensorShape;
       output_map_[tensorName].tensor_length = tensor_length;
+      output_map_[tensorName].data_type = tensorDataType;
+      //TODO not sure
       Util::checkCudaErrorCode(cudaMallocAsync(
-          &output_map_[tensorName].buffer, tensor_length * sizeof(T), stream));
+          &output_map_[tensorName].buffer, tensor_length * sizeof(tensorDataType), stream));
 
     } else {
       auto msg = "Error, IO Tensor is neither an input or output!";
@@ -228,8 +171,7 @@ bool Engine<T>::loadNetwork(std::string trtModelPath) {
   return true;
 }
 
-template <typename T>
-bool Engine<T>::build(const std::string& onnxModelPath) {
+bool Engine::build(const std::string& onnxModelPath) {
   // Create our engine builder.
   auto builder = std::unique_ptr<nvinfer1::IBuilder>(
       nvinfer1::createInferBuilder(m_logger));
@@ -363,7 +305,7 @@ bool Engine<T>::build(const std::string& onnxModelPath) {
     haveDynamicDims_ = inputC == -1 || inputH == -1 || inputW == -1;
     // Specify the optimization profile`
     if (haveDynamicDims_) {
-       spdlog::info("Model has dynamic range, set manual dimensions"):
+       spdlog::info("Model has dynamic range, set manual dimensions");
       optProfile->setDimensions(
           network->getInput(0)->getName(), nvinfer1::OptProfileSelector::kMIN,
           nvinfer1::Dims4(m_options.MIN_DIMS_[0], m_options.MIN_DIMS_[1],
@@ -387,36 +329,6 @@ bool Engine<T>::build(const std::string& onnxModelPath) {
           inputName, nvinfer1::OptProfileSelector::kMAX,
           nvinfer1::Dims4(m_options.maxBatchSize, inputC, inputH, inputW));
     }
-
-    // Specify the optimization profile`
-    // if (doesSupportDynamicBatch) {
-    //   optProfile->setDimensions(
-    //       inputName, nvinfer1::OptProfileSelector::kMIN,
-    //       nvinfer1::Dims4(1, inputC, inputH, minInputWidth));
-    // } else {
-    //   optProfile->setDimensions(inputName,
-    //   nvinfer1::OptProfileSelector::kMIN,
-    //                             nvinfer1::Dims4(m_options.optBatchSize,
-    //                             inputC,
-    //                                             inputH, minInputWidth));
-    // }
-    // if (doesSupportDynamicWidth) {
-    //   optProfile->setDimensions(
-    //       inputName, nvinfer1::OptProfileSelector::kOPT,
-    //       nvinfer1::Dims4(m_options.optBatchSize, inputC, inputH,
-    //                       m_options.optInputWidth));
-    //   optProfile->setDimensions(
-    //       inputName, nvinfer1::OptProfileSelector::kMAX,
-    //       nvinfer1::Dims4(m_options.maxBatchSize, inputC, inputH,
-    //                       m_options.maxInputWidth));
-    // } else {
-    // optProfile->setDimensions(
-    //     inputName, nvinfer1::OptProfileSelector::kOPT,
-    //     nvinfer1::Dims4(m_options.optBatchSize, inputC, inputH, inputW));
-    // optProfile->setDimensions(
-    //     inputName, nvinfer1::OptProfileSelector::kMAX,
-    //     nvinfer1::Dims4(m_options.maxBatchSize, inputC, inputH, inputW));
-    //}
   }
   config->addOptimizationProfile(optProfile);
   // Set the precision level

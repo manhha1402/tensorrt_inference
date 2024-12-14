@@ -2,7 +2,7 @@
 #pragma once
 
 #include <yaml-cpp/yaml.h>
-
+#include <variant>
 #include <opencv2/opencv.hpp>
 
 #include "tensorrt_inference/tensorrt_api/engine.h"
@@ -20,7 +20,11 @@ class Model {
   bool doInference(
       cv::cuda::GpuMat &gpuImg,
       std::unordered_map<std::string, std::vector<float>> &feature_vectors);
-  std::unique_ptr<Engine<float>> m_trtEngine = nullptr;
+  bool doInference(
+    cv::cuda::GpuMat &gpuImg,
+    std::unordered_map<std::string, std::vector<float>> &feature_f_vectors,
+      std::unordered_map<std::string, std::vector<int32_t>> &feature_int_vectors);
+  std::unique_ptr<Engine> m_trtEngine = nullptr;
 
  protected:
   // Preprocess the input. Normalize values between [0.f, 1.f] Setting the

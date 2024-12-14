@@ -44,16 +44,17 @@ include_directories(include)
 # Build the YoloV9 library
 add_library(${PROJECT_NAME}_lib SHARED 
                 src/tensorrt_api/engine.cpp
-                src/utils.cpp
                 src/model.cpp
+                src/utils.cpp
+                
                 src/detection.cpp
                 src/yolov8.cpp
-                src/yolov9.cpp
-                src/retinaface.cpp
-                src/face_recognition.cpp
-                src/paddle_ocr/clipper.cpp
-                src/paddle_ocr/paddleocr_utils.cpp
-                src/paddle_ocr/paddleocr.cpp
+                # src/yolov9.cpp
+                # src/retinaface.cpp
+                # src/face_recognition.cpp
+                # src/paddle_ocr/clipper.cpp
+                # src/paddle_ocr/paddleocr_utils.cpp
+                # src/paddle_ocr/paddleocr.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC 
@@ -72,15 +73,15 @@ target_include_directories(
   PRIVATE ${CMAKE_CURRENT_BINARY_DIR}  # for private headers generated during build
 )
 
-if(BUILD_PYTHON_BINDING)
-  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-  file(MAKE_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-  file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-  find_package(pybind11 REQUIRED)
-  add_subdirectory(pybind)
-endif()
+# if(BUILD_PYTHON_BINDING)
+#   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+#   set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+#   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+#   file(MAKE_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+#   file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+#   find_package(pybind11 REQUIRED)
+#   add_subdirectory(pybind)
+# endif()
 
 
 # Build and link the executables

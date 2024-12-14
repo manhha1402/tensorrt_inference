@@ -3,31 +3,28 @@
 
 #include <filesystem>
 namespace tensorrt_inference {
-template <typename T>
-void Engine<T>::transformOutput(std::vector<std::vector<std::vector<T>>> &input,
-                                std::vector<std::vector<T>> &output) {
-  if (input.size() != 1) {
-    auto msg = "The feature vector has incorrect dimensions!";
-    spdlog::error(msg);
-    throw std::logic_error(msg);
-  }
+// void Engine<T>::transformOutput(std::vector<std::vector<std::vector<T>>> &input,
+//                                 std::vector<std::vector<T>> &output) {
+//   if (input.size() != 1) {
+//     auto msg = "The feature vector has incorrect dimensions!";
+//     spdlog::error(msg);
+//     throw std::logic_error(msg);
+//   }
 
-  output = std::move(input[0]);
-}
+//   output = std::move(input[0]);
+// }
 
-template <typename T>
-void Engine<T>::transformOutput(std::vector<std::vector<std::vector<T>>> &input,
-                                std::vector<T> &output) {
-  // if (input.size() != 1 || input[0].size() != 1) {
-  //     auto msg = "The feature vector has incorrect dimensions!";
-  //     spdlog::error(msg);
-  //     throw std::logic_error(msg);
-  // }
-  output = std::move(input[0][0]);
-}
+// void Engine::transformOutput(std::vector<std::vector<std::vector<T>>> &input,
+//                                 std::vector<T> &output) {
+//   // if (input.size() != 1 || input[0].size() != 1) {
+//   //     auto msg = "The feature vector has incorrect dimensions!";
+//   //     spdlog::error(msg);
+//   //     throw std::logic_error(msg);
+//   // }
+//   output = std::move(input[0][0]);
+// }
 
-template <typename T>
-cv::cuda::GpuMat Engine<T>::resizeKeepAspectRatioPadRightBottom(
+cv::cuda::GpuMat Engine::resizeKeepAspectRatioPadRightBottom(
     const cv::cuda::GpuMat &input, size_t height, size_t width,
     const cv::Scalar &bgcolor) {
   float r = std::min(width / (input.cols * 1.0), height / (input.rows * 1.0));
@@ -40,8 +37,7 @@ cv::cuda::GpuMat Engine<T>::resizeKeepAspectRatioPadRightBottom(
   return out;
 }
 
-template <typename T>
-void Engine<T>::getDeviceNames(std::vector<std::string> &deviceNames) {
+void Engine::getDeviceNames(std::vector<std::string> &deviceNames) {
   int numGPUs;
   cudaGetDeviceCount(&numGPUs);
 
@@ -53,8 +49,7 @@ void Engine<T>::getDeviceNames(std::vector<std::string> &deviceNames) {
   }
 }
 
-template <typename T>
-std::string Engine<T>::serializeEngineOptions(
+std::string Engine::serializeEngineOptions(
     const Options &options, const std::string &onnxModelPath) {
   const auto filenamePos = onnxModelPath.find_last_of('/') + 1;
   std::string engineName =
@@ -99,8 +94,7 @@ std::string Engine<T>::serializeEngineOptions(
   return engineName;
 }
 
-template <typename T>
-void Engine<T>::clearGpuBuffers() {
+void Engine::clearGpuBuffers() {
   if (!input_map_.empty()) {
     // Free GPU memory of inputs
     for (auto it = input_map_.begin(); it != input_map_.end(); ++it) {
