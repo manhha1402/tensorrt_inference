@@ -1,6 +1,5 @@
 #include <yaml-cpp/yaml.h>
 
-#include <opencv2/cudaimgproc.hpp>
 
 #include "tensorrt_inference/tensorrt_inference.h"
 // Runs object detection on video stream then displays annotated results.

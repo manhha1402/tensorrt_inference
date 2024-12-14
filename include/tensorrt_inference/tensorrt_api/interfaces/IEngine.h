@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "NvInfer.h"  // Include for nvinfer1::Dims and nvinfer1::Dims3
+#include "NvInferPlugin.h"
 namespace tensorrt_inference {
 struct NetInfo {
   void *buffer;

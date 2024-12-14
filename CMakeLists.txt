@@ -87,13 +87,16 @@ endif()
 add_executable(detection_test nodes/detection_test.cpp)
 target_link_libraries(detection_test ${PROJECT_NAME}_lib)
 
-add_executable(paddleocr_test nodes/paddleocr_test.cpp)
-target_link_libraries(paddleocr_test ${PROJECT_NAME}_lib)
+# add_executable(paddleocr_test nodes/paddleocr_test.cpp)
+# target_link_libraries(paddleocr_test ${PROJECT_NAME}_lib)
 
 
-add_executable(face_rec_test nodes/face_rec_test.cpp)
-target_link_libraries(face_rec_test ${PROJECT_NAME}_lib)
+# add_executable(face_rec_test nodes/face_rec_test.cpp)
+# target_link_libraries(face_rec_test ${PROJECT_NAME}_lib)
 
+
+add_executable(detectron2_test nodes/detectron2_test.cpp)
+target_link_libraries(detectron2_test ${PROJECT_NAME}_lib)
 ##########
 # EXPORT #
 ##########
@@ -108,10 +111,10 @@ install(
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
 )
 
-install(
-  TARGETS face_rec_test detection_test paddleocr_test
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
-)
+# install(
+#   TARGETS face_rec_test detection_test paddleocr_test detectron2_test
+#   DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
+# )
 
 install(
     DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/

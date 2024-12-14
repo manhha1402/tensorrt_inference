@@ -28,7 +28,8 @@ bool Engine<T>::buildLoadNetwork(const std::string& onnx_file) {
       std::filesystem::create_directories(engine_dir);
       spdlog::info("Created directory: {}", engine_dir.string());
     }
-
+    // init plugin 
+    initLibNvInferPlugins(&m_logger, "");
     auto ret = build(onnx_file);
     if (!ret) {
       return false;
@@ -60,14 +61,13 @@ bool Engine<T>::loadNetwork(std::string trtModelPath) {
     spdlog::error(msg);
     throw std::runtime_error(msg);
   }
-
+  initLibNvInferPlugins(&m_logger, "");
   // Create a runtime to deserialize the engine file.
   m_runtime = std::unique_ptr<nvinfer1::IRuntime>{
       nvinfer1::createInferRuntime(m_logger)};
   if (!m_runtime) {
     return false;
   }
-
   // Set the device index
   auto ret = cudaSetDevice(m_options.deviceIndex);
   if (ret != 0) {
@@ -104,6 +104,7 @@ bool Engine<T>::loadNetwork(std::string trtModelPath) {
   // Create a cuda stream
   cudaStream_t stream;
   Util::checkCudaErrorCode(cudaStreamCreate(&stream));
+  spdlog::info("Allocate GPU memory for input and output buffers");
 
   // Allocate GPU memory for input and output buffers
   for (int i = 0; i < m_engine->getNbIOTensors(); ++i) {
@@ -112,7 +113,7 @@ bool Engine<T>::loadNetwork(std::string trtModelPath) {
     const auto tensorShape =
         m_engine->getTensorShape(tensorName);  // getBindingDimensions
     const auto tensorDataType = m_engine->getTensorDataType(tensorName);
-
+    spdlog::info(tensorName);
     if (tensorType == nvinfer1::TensorIOMode::kINPUT) {
       // The implementation currently only supports inputs of type float
       if (m_engine->getTensorDataType(tensorName) !=
@@ -360,11 +361,9 @@ bool Engine<T>::build(const std::string& onnxModelPath) {
                  inputName, inputC, inputH, inputW);
 
     haveDynamicDims_ = inputC == -1 || inputH == -1 || inputW == -1;
-    spdlog::info("Input name and dimensions of model: ({} : {}, {}, {})",
-                 m_options.OPT_DIMS_[0], m_options.OPT_DIMS_[1],
-                 m_options.OPT_DIMS_[2], m_options.OPT_DIMS_[3]);
     // Specify the optimization profile`
     if (haveDynamicDims_) {
+       spdlog::info("Model has dynamic range, set manual dimensions"):
       optProfile->setDimensions(
           network->getInput(0)->getName(), nvinfer1::OptProfileSelector::kMIN,
           nvinfer1::Dims4(m_options.MIN_DIMS_[0], m_options.MIN_DIMS_[1],
@@ -453,7 +452,6 @@ bool Engine<T>::build(const std::string& onnxModelPath) {
           "calibration data directory to Engine::build method";
       throw std::runtime_error(msg);
     }
-
     config->setFlag((nvinfer1::BuilderFlag::kINT8));
 
     const auto input = network->getInput(0);
