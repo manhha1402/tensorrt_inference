@@ -30,12 +30,14 @@ int main(int argc, char *argv[]) {
   // }
 
   detection = std::make_shared<tensorrt_inference::YoloV8>(model_name);
+
   // Run inference
   tensorrt_inference::DetectionParams params(0.5, 0.5, 0.5, 0.5, 20);
   std::vector<std::string> detected_classes{"all"};
+
   const auto objects = detection->detect(img, params, detected_classes);
   std::cout << "Detected " << objects.size() << " objects" << std::endl;
-
+  
   // Draw the bounding boxes on the image
   auto result = detection->drawObjectLabels(img, objects);
 

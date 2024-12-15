@@ -150,6 +150,26 @@ Int8EntropyCalibrator2::~Int8EntropyCalibrator2() {
 };
 /////////////////////////////////////////////////////////////////
 
+namespace {
+  int toSizeOf(const nvinfer1::DataType& data_type) {
+    switch (data_type) {
+        case nvinfer1::DataType::kINT32:
+            return sizeof(int32_t);
+        case nvinfer1::DataType::kINT8:
+            return sizeof(int8_t);
+        case nvinfer1::DataType::kFLOAT:
+            return sizeof(float);
+        case nvinfer1::DataType::kBOOL:
+            return sizeof(bool);
+        default:
+            spdlog::error("Unknown data type: {}", static_cast<int>(data_type));
+            throw std::runtime_error("Unknown data type encountered in toSizeOf");
+    }
+}
+}
+
+
+
 Engine::Engine(const Options &options) : m_options(options) {}
 
 Engine::~Engine() {
@@ -293,7 +313,7 @@ bool Engine::loadNetwork(std::string trtModelPath) {
       output_map_[tensorName].data_type = tensorDataType;
       //TODO not sure
       Util::checkCudaErrorCode(cudaMallocAsync(
-          &output_map_[tensorName].buffer, tensor_length * sizeof(tensorDataType), stream));
+          &output_map_[tensorName].buffer, tensor_length * toSizeOf(tensorDataType), stream));
 
     } else {
       auto msg = "Error, IO Tensor is neither an input or output!";
@@ -599,7 +619,7 @@ bool Engine::runInference(
     // Copy the output
     Util::checkCudaErrorCode(
         cudaMemcpyAsync(feature_vectors[it->first].data(), it->second.buffer,
-                        it->second.tensor_length * sizeof(it->second.data_type),
+                        it->second.tensor_length * toSizeOf(it->second.data_type),
                         cudaMemcpyDeviceToHost, inferenceCudaStream));
   }
 
@@ -655,7 +675,7 @@ bool Engine::runInference(
         // Copy the output
         Util::checkCudaErrorCode(
             cudaMemcpyAsync(feature_f_vectors[it->first].data(), it->second.buffer,
-                            it->second.tensor_length * sizeof(it->second.data_type),
+                            it->second.tensor_length * toSizeOf(it->second.data_type),
                             cudaMemcpyDeviceToHost, inferenceCudaStream));  
       }
       else if(it->second.data_type == nvinfer1::DataType::kINT32)
@@ -664,7 +684,7 @@ bool Engine::runInference(
         // Copy the output
         Util::checkCudaErrorCode(
             cudaMemcpyAsync(feature_int_vectors[it->first].data(), it->second.buffer,
-                            it->second.tensor_length * sizeof(it->second.data_type),
+                            it->second.tensor_length * toSizeOf(it->second.data_type),
                             cudaMemcpyDeviceToHost, inferenceCudaStream));
       }
       else{

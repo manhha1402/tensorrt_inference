@@ -35,7 +35,7 @@ endif()
 set(CUDA_TOOLKIT_ROOT_DIR /usr/local/cuda)
 find_package(CUDA REQUIRED)
 find_package(TensorRT REQUIRED)
-find_package(OpenCV REQUIRED)
+find_package(OpenCV REQUIRED NO_MODULE PATHS /usr/local NO_DEFAULT_PATH)
 find_package(YAML-CPP REQUIRED)
 find_package(fmt REQUIRED)
 

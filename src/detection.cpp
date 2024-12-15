@@ -47,6 +47,7 @@ std::vector<Object> Detection::detect(
     cv::cuda::GpuMat &inputImageBGR, const DetectionParams &params,
     const std::vector<std::string> &detected_class) {
   std::unordered_map<std::string, std::vector<float>> feature_vectors;
+  std::cout<<"doInference"<<std::endl;
   doInference(inputImageBGR, feature_vectors);
   inputImageBGR.release();
   // Check if our model does only object detection or also supports segmentation

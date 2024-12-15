@@ -118,6 +118,7 @@ std::vector<Object> YoloV8::postProcessSegmentation(
     std::unordered_map<std::string, std::vector<float>> &feature_vectors,
     const DetectionParams &params,
     const std::vector<std::string> &detected_class) {
+  std::cout<<"postProcessSegmentation"<<std::endl;
   const auto &output0_info = m_trtEngine->getOutputInfo().at("output0");
   const auto &output1_info = m_trtEngine->getOutputInfo().at("output1");
 
@@ -127,6 +128,12 @@ std::vector<Object> YoloV8::postProcessSegmentation(
   const int num_net0_anchors = output0_info.dims.d[2];
   const int SEG_H = output1_info.dims.d[2];
   const int SEG_W = output1_info.dims.d[3];
+  std::cout<<SEG_H<<std::endl;
+  std::cout<<SEG_W<<std::endl;
+  std::cout<<num_net0_channels<<std::endl;
+  std::cout<<num_seg_channels<<std::endl;
+  std::cout<<num_net0_anchors<<std::endl;
+
   const auto numClasses = num_net0_channels - num_seg_channels - 4;
   cv::Mat output = cv::Mat(num_net0_channels, num_net0_anchors, CV_32F,
                            feature_vectors.at("output0").data());
@@ -134,7 +141,7 @@ std::vector<Object> YoloV8::postProcessSegmentation(
 
   cv::Mat protos = cv::Mat(num_seg_channels, SEG_H * SEG_W, CV_32F,
                            feature_vectors.at("output1").data());
-
+  cv::imwrite("protos.jpg",protos);
   std::vector<int> labels;
   std::vector<float> scores;
   std::vector<cv::Rect> bboxes;
@@ -208,6 +215,9 @@ std::vector<Object> YoloV8::postProcessSegmentation(
   // Require OpenCV 4.7 for this function
   cv::dnn::NMSBoxesBatched(bboxes, scores, labels, params.obj_threshold,
                            params.nms_threshold, indices);
+  std::cout<<bboxes.size()<<std::endl;
+  std::cout<<labels.size()<<std::endl;
+  std::cout<<indices.size()<<std::endl;
 
   // Obtain the segmentation masks
   cv::Mat masks;
@@ -221,6 +231,7 @@ std::vector<Object> YoloV8::postProcessSegmentation(
     Object obj;
     obj.label = labels[i];
     obj.rect = tmp;
+    std::cout<<labels[i]<<std::endl;
     obj.probability = scores[i];
     masks.push_back(maskConfs[i]);
     objs.push_back(obj);
@@ -230,6 +241,10 @@ std::vector<Object> YoloV8::postProcessSegmentation(
   // Convert segmentation mask to original frame
   if (!masks.empty()) {
     cv::Mat matmulRes = (masks * protos).t();
+    std::cout<<masks.size()<<std::endl;
+    std::cout<<indices.size()<<std::endl;
+    std::cout<<indices.size()<<std::endl;
+
     cv::Mat maskMat = matmulRes.reshape(indices.size(), {SEG_W, SEG_H});
 
     std::vector<cv::Mat> maskChannels;
