@@ -15,7 +15,6 @@
 #include "NvInfer.h"
 #include "NvInferPlugin.h"
 #include "macros.h"
-#include "tensorrt_inference/tensorrt_api/Int8Calibrator.h"
 #include "tensorrt_inference/tensorrt_api/logger.h"
 #include "tensorrt_inference/tensorrt_api/util/Stopwatch.h"
 #include "tensorrt_inference/tensorrt_api/util/Util.h"
@@ -76,7 +75,14 @@ struct NetInfo {
   size_t tensor_length = 0;
   nvinfer1::DataType data_type;
 };
-
+struct InferDeleter
+{
+	template <typename T>
+	void operator()(T* obj) const
+	{
+		delete obj;
+	}
+};
 class Engine {
  public:
   Engine(const Options &options);
@@ -98,10 +104,10 @@ class Engine {
   // Input format [input][batch][cv::cuda::GpuMat]
   // Output format [batch][output][feature_vector]
   bool runInference(
-      cv::cuda::GpuMat &input,
+      float* input_buff,
       std::unordered_map<std::string, std::vector<float>> &feature_vectors);
   bool runInference(
-      cv::cuda::GpuMat &input,
+      float* input_buff,
       std::unordered_map<std::string, std::vector<float>> &feature_f_vectors,
       std::unordered_map<std::string, std::vector<int32_t>> &feature_int_vectors);
 
@@ -152,7 +158,6 @@ class Engine {
     }
     return outputLength;
   }
-
  protected:
   const Options m_options;
   bool haveDynamicDims_;
@@ -175,7 +180,6 @@ class Engine {
   // Must keep IRuntime around for inference, see:
   // https://forums.developer.nvidia.com/t/is-it-safe-to-deallocate-nvinfer1-iruntime-after-creating-an-nvinfer1-icudaengine-but-before-running-inference-with-said-icudaengine/255381/2?u=cyruspk4w6
   std::unique_ptr<nvinfer1::IRuntime> m_runtime = nullptr;
-  std::unique_ptr<Int8EntropyCalibrator2> m_calibrator = nullptr;
   std::unique_ptr<nvinfer1::ICudaEngine> m_engine = nullptr;
   std::unique_ptr<nvinfer1::IExecutionContext> m_context = nullptr;
   Logger m_logger;

@@ -38,74 +38,111 @@ Model::Model(const std::string &model_name, tensorrt_inference::Options options,
 }
 Model::~Model() {}
 
-cv::cuda::GpuMat Model::preprocess(const cv::cuda::GpuMat &gpuImg) {
-  // Populate the input vectors
+float* Model::preProcess(const cv::Mat& img){
+  cv::Mat mat;
+  cv::cvtColor(img, mat, cv::COLOR_BGR2RGB);
+  int maxImageLength = img.cols > img.rows ? img.cols : img.rows;
   const auto &input_info = m_trtEngine->getInputInfo().begin();
+  if ( (input_info->second.dims.d[2] == input_info->second.dims.d[3]))
+    {
+        factors_.emplace_back(maxImageLength / 640.0);
+        factors_.emplace_back(maxImageLength / 640.0);
+    }
+    else
+    {
+        factors_.emplace_back(img.rows / 640.0);
+        factors_.emplace_back(img.cols / 640.0);
+    }
 
-  // These params will be used in the post-processing stage
-  input_frame_h_ = gpuImg.rows;
-  input_frame_w_ = gpuImg.cols;
-  m_ratio =
-      1.f /
-      std::min(input_info->second.dims.d[3] / static_cast<float>(gpuImg.cols),
-               input_info->second.dims.d[2] / static_cast<float>(gpuImg.rows));
-  // Convert the image from BGR to RGB
-  cv::cuda::GpuMat rgbMat = gpuImg;
-  auto resized = rgbMat;
-  // Resize to the model expected input size while maintaining the aspect ratio
-  // with the use of padding
-  if (resized.rows != input_info->second.dims.d[2] ||
-      resized.cols != input_info->second.dims.d[3]) {
-    // Only resize if not already the right size to avoid unecessary copy
-    resized = Engine::resizeKeepAspectRatioPadRightBottom(
-        rgbMat, input_info->second.dims.d[2], input_info->second.dims.d[3],
-        cv::Scalar(128, 128, 128));
-  }
-  cv::cuda::GpuMat gpu_dst(1, resized.rows * resized.cols, CV_8UC3);
-  size_t width = resized.cols * resized.rows;
-  if (swapBR_) {
-    std::vector<cv::cuda::GpuMat> input_channels{
-        cv::cuda::GpuMat(resized.rows, resized.cols, CV_8U,
-                         &(gpu_dst.ptr()[width * 2])),
-        cv::cuda::GpuMat(resized.rows, resized.cols, CV_8U,
-                         &(gpu_dst.ptr()[width])),
-        cv::cuda::GpuMat(resized.rows, resized.cols, CV_8U,
-                         &(gpu_dst.ptr()[0]))};
-    cv::cuda::split(resized, input_channels);  // HWC -> CHW
-  } else {
-    std::vector<cv::cuda::GpuMat> input_channels{
-        cv::cuda::GpuMat(resized.rows, resized.cols, CV_8U,
-                         &(gpu_dst.ptr()[0])),
-        cv::cuda::GpuMat(resized.rows, resized.cols, CV_8U,
-                         &(gpu_dst.ptr()[width])),
-        cv::cuda::GpuMat(resized.rows, resized.cols, CV_8U,
-                         &(gpu_dst.ptr()[width * 2]))};
-    cv::cuda::split(resized, input_channels);  // HWC -> CHW
-  }
-  cv::cuda::GpuMat mfloat;
-  if (normalized_) {
-    // [0.f, 1.f]
-    gpu_dst.convertTo(mfloat, CV_32FC3, 1.f / 255.f);
-    for (auto &val : sub_vals_) val = val / 255.0f;
-  } else {
-    // [0.f, 255.f]
-    gpu_dst.convertTo(mfloat, CV_32FC3);
-  }
+  float* input_buff = (float*)malloc(input_info->second.tensor_length * sizeof(float));
 
-  // Apply scaling and mean subtraction
-  cv::cuda::subtract(mfloat,
-                     cv::Scalar(sub_vals_[0], sub_vals_[1], sub_vals_[2]),
-                     mfloat, cv::noArray(), -1);
-  cv::cuda::divide(mfloat, cv::Scalar(div_vals_[0], div_vals_[1], div_vals_[2]),
-                   mfloat, 1, -1);
-  return mfloat;
+  cv::Mat maxImage = cv::Mat::zeros(maxImageLength, maxImageLength, CV_8UC3);
+  maxImage = maxImage * 255;
+  cv::Rect roi(0, 0, img.cols, img.rows);
+  mat.copyTo(cv::Mat(maxImage, roi));
+  cv::Mat resizeImg;
+  int length = 640;
+
+  cv::resize(maxImage, resizeImg, cv::Size(length, length), 0.0f, 0.0f, cv::INTER_LINEAR);
+  resizeImg.convertTo(resizeImg, CV_32FC3, 1 / 255.0);
+  for (int i = 0; i < resizeImg.channels(); ++i) {
+      cv::extractChannel(resizeImg, cv::Mat(resizeImg.rows, resizeImg.cols, CV_32FC1, input_buff + i * resizeImg.rows * resizeImg.cols), i);
+  }
+  return input_buff;  
 }
 
+
+// cv::cuda::GpuMat Model::preprocess(const cv::cuda::GpuMat &gpuImg) {
+//   // Populate the input vectors
+//   const auto &input_info = m_trtEngine->getInputInfo().begin();
+
+//   // These params will be used in the post-processing stage
+//   input_frame_h_ = gpuImg.rows;
+//   input_frame_w_ = gpuImg.cols;
+  
+//   m_ratio =
+//       1.f /
+//       std::min(input_info->second.dims.d[3] / static_cast<float>(gpuImg.cols),
+//                input_info->second.dims.d[2] / static_cast<float>(gpuImg.rows));
+//   // Convert the image from BGR to RGB
+//   cv::cuda::GpuMat rgbMat = gpuImg;
+//   auto resized = rgbMat;
+//   // Resize to the model expected input size while maintaining the aspect ratio
+//   // with the use of padding
+//   if (resized.rows != input_info->second.dims.d[2] ||
+//       resized.cols != input_info->second.dims.d[3]) {
+//     // Only resize if not already the right size to avoid unecessary copy
+//     resized = Engine::resizeKeepAspectRatioPadRightBottom(
+//         rgbMat, input_info->second.dims.d[2], input_info->second.dims.d[3],
+//         cv::Scalar(128, 128, 128));
+//   }
+//   cv::cuda::GpuMat gpu_dst(1, resized.rows * resized.cols, CV_8UC3);
+//   size_t width = resized.cols * resized.rows;
+//   if (swapBR_) {
+//     std::vector<cv::cuda::GpuMat> input_channels{
+//         cv::cuda::GpuMat(resized.rows, resized.cols, CV_8U,
+//                          &(gpu_dst.ptr()[width * 2])),
+//         cv::cuda::GpuMat(resized.rows, resized.cols, CV_8U,
+//                          &(gpu_dst.ptr()[width])),
+//         cv::cuda::GpuMat(resized.rows, resized.cols, CV_8U,
+//                          &(gpu_dst.ptr()[0]))};
+//     cv::cuda::split(resized, input_channels);  // HWC -> CHW
+//   } else {
+//     std::vector<cv::cuda::GpuMat> input_channels{
+//         cv::cuda::GpuMat(resized.rows, resized.cols, CV_8U,
+//                          &(gpu_dst.ptr()[0])),
+//         cv::cuda::GpuMat(resized.rows, resized.cols, CV_8U,
+//                          &(gpu_dst.ptr()[width])),
+//         cv::cuda::GpuMat(resized.rows, resized.cols, CV_8U,
+//                          &(gpu_dst.ptr()[width * 2]))};
+//     cv::cuda::split(resized, input_channels);  // HWC -> CHW
+//   }
+ 
+//   cv::cuda::GpuMat mfloat;
+//   if (normalized_) {
+//     // [0.f, 1.f]
+//     gpu_dst.convertTo(mfloat, CV_32FC3, 1.f / 255.f);
+//     for (auto &val : sub_vals_) val = val / 255.0f;
+//   } else {
+//     // [0.f, 255.f]
+//     gpu_dst.convertTo(mfloat, CV_32FC3);
+//   }
+
+//   // Apply scaling and mean subtraction
+//   cv::cuda::subtract(mfloat,
+//                      cv::Scalar(sub_vals_[0], sub_vals_[1], sub_vals_[2]),
+//                      mfloat, cv::noArray(), -1);
+//   cv::cuda::divide(mfloat, cv::Scalar(div_vals_[0], div_vals_[1], div_vals_[2]),
+//                    mfloat, 1, -1);
+//   return mfloat;
+// }
+
 bool Model::doInference(
-    cv::cuda::GpuMat &gpuImg,
+    const cv::Mat &img,
     std::unordered_map<std::string, std::vector<float>> &feature_vectors) {
-  auto gpu_input = preprocess(gpuImg);
-  auto succ = m_trtEngine->runInference(gpu_input, feature_vectors);
+  auto input_buff = preProcess(img);
+      std::cout<<"runInference"<<std::endl;
+  auto succ = m_trtEngine->runInference(input_buff, feature_vectors);
   if (!succ) {
     spdlog::error("Error: Unable to run inference.");
     return false;
@@ -113,16 +150,16 @@ bool Model::doInference(
   return true;
 }
 
-bool Model::doInference(
-    cv::cuda::GpuMat &gpuImg,
-    std::unordered_map<std::string, std::vector<float>> &feature_f_vectors,
-      std::unordered_map<std::string, std::vector<int32_t>> &feature_int_vectors) {
-  auto gpu_input = preprocess(gpuImg);
-  auto succ = m_trtEngine->runInference(gpu_input, feature_f_vectors,feature_int_vectors);
-  if (!succ) {
-    spdlog::error("Error: Unable to run inference.");
-    return false;
-  }
-  return true;
-}
+// bool Model::doInference(
+//     cv::Mat &gpuImg,
+//     std::unordered_map<std::string, std::vector<float>> &feature_f_vectors,
+//       std::unordered_map<std::string, std::vector<int32_t>> &feature_int_vectors) {
+//   auto gpu_input = preprocess(gpuImg);
+//   auto succ = m_trtEngine->runInference(gpu_input, feature_f_vectors,feature_int_vectors);
+//   if (!succ) {
+//     spdlog::error("Error: Unable to run inference.");
+//     return false;
+//   }
+//   return true;
+// }
 }  // namespace tensorrt_inference

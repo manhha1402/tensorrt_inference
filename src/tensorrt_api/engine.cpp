@@ -31,125 +31,6 @@ void Logger::log(Severity severity, const char *msg) noexcept {
   }
 }
 
-Int8EntropyCalibrator2::Int8EntropyCalibrator2(
-    int32_t batchSize, int32_t inputW, int32_t inputH,
-    const std::string &calibDataDirPath, const std::string &calibTableName,
-    const std::string &inputBlobName, const std::array<float, 3> &subVals,
-    const std::array<float, 3> &divVals, bool normalize, bool readCache)
-    : m_batchSize(batchSize), m_inputW(inputW), m_inputH(inputH), m_imgIdx(0),
-      m_calibTableName(calibTableName), m_inputBlobName(inputBlobName),
-      m_subVals(subVals), m_divVals(divVals), m_normalize(normalize),
-      m_readCache(readCache) {
-
-  // Allocate GPU memory to hold the entire batch
-  m_inputCount = 3 * inputW * inputH * batchSize;
-  checkCudaErrorCode(cudaMalloc(&m_deviceInput, m_inputCount * sizeof(float)));
-
-  // Read the name of all the files in the specified directory.
-  if (!doesFileExist(calibDataDirPath)) {
-    auto msg =
-        "Error, directory at provided path does not exist: " + calibDataDirPath;
-    spdlog::error(msg);
-    throw std::runtime_error(msg);
-  }
-
-  m_imgPaths = getFilesInDirectory(calibDataDirPath);
-  if (m_imgPaths.size() < static_cast<size_t>(batchSize)) {
-    auto msg = "Error, there are fewer calibration images than the specified "
-               "batch size!";
-    spdlog::error(msg);
-    throw std::runtime_error(msg);
-  }
-
-  // Randomize the calibration data
-  auto rd = std::random_device{};
-  auto rng = std::default_random_engine{rd()};
-  std::shuffle(std::begin(m_imgPaths), std::end(m_imgPaths), rng);
-}
-
-int32_t Int8EntropyCalibrator2::getBatchSize() const noexcept {
-  // Return the batch size
-  return m_batchSize;
-}
-
-bool Int8EntropyCalibrator2::getBatch(void **bindings, const char **names,
-                                      int32_t nbBindings) noexcept {
-  // // This method will read a batch of images into GPU memory, and place the
-  // // pointer to the GPU memory in the bindings variable.
-
-  // if (m_imgIdx + m_batchSize > static_cast<int>(m_imgPaths.size())) {
-  //     // There are not enough images left to satisfy an entire batch
-  //     return false;
-  // }
-
-  // // Read the calibration images into memory for the current batch
-  // std::vector<cv::cuda::GpuMat> inputImgs;
-  // for (int i = m_imgIdx; i < m_imgIdx + m_batchSize; i++) {
-  //     spdlog::info("Reading image {}: {}", i, m_imgPaths[i]);
-  //     auto cpuImg = cv::imread(m_imgPaths[i]);
-  //     if (cpuImg.empty()) {
-  //         spdlog::error("Fatal error: Unable to read image at path: " +
-  //         m_imgPaths[i]); return false;
-  //     }
-
-  //     cv::cuda::GpuMat gpuImg;
-  //     gpuImg.upload(cpuImg);
-  //     //cv::cuda::cvtColor(gpuImg, gpuImg, cv::COLOR_BGR2RGB);
-
-  //     // TODO: Define any preprocessing code here, such as resizing
-  //     auto resized =
-  //     Engine<float>::resizeKeepAspectRatioPadRightBottom(gpuImg, m_inputH,
-  //     m_inputW);
-
-  //     inputImgs.emplace_back(std::move(resized));
-  // }
-
-  // // Convert the batch from NHWC to NCHW
-  // // ALso apply normalization, scaling, and mean subtraction
-  // auto mfloat = Engine<float>::blobFromGpuMats(inputImgs, m_subVals,
-  // m_divVals, m_normalize, true); auto *dataPointer = mfloat.ptr<void>();
-
-  // // Copy the GPU buffer to member variable so that it persists
-  // checkCudaErrorCode(cudaMemcpyAsync(m_deviceInput, dataPointer, m_inputCount
-  // * sizeof(float), cudaMemcpyDeviceToDevice));
-
-  // m_imgIdx += m_batchSize;
-  // if (std::string(names[0]) != m_inputBlobName) {
-  //     spdlog::error("Error: Incorrect input name provided!");
-  //     return false;
-  // }
-  // bindings[0] = m_deviceInput;
-  return true;
-}
-
-void const *
-Int8EntropyCalibrator2::readCalibrationCache(size_t &length) noexcept {
-  spdlog::info("Searching for calibration cache: {}", m_calibTableName);
-  m_calibCache.clear();
-  std::ifstream input(m_calibTableName, std::ios::binary);
-  input >> std::noskipws;
-  if (m_readCache && input.good()) {
-    spdlog::info("Reading calibration cache: {}", m_calibTableName);
-    std::copy(std::istream_iterator<char>(input), std::istream_iterator<char>(),
-              std::back_inserter(m_calibCache));
-  }
-  length = m_calibCache.size();
-  return length ? m_calibCache.data() : nullptr;
-}
-
-void Int8EntropyCalibrator2::writeCalibrationCache(
-    const void *ptr, std::size_t length) noexcept {
-  spdlog::info("Writing calibration cache: {}", m_calibTableName);
-  spdlog::info("Calibration cache size: {} bytes", length);
-  std::ofstream output(m_calibTableName, std::ios::binary);
-  output.write(reinterpret_cast<const char *>(ptr), length);
-}
-
-Int8EntropyCalibrator2::~Int8EntropyCalibrator2() {
-  checkCudaErrorCode(cudaFree(m_deviceInput));
-};
-/////////////////////////////////////////////////////////////////
-
 namespace {
   int toSizeOf(const nvinfer1::DataType& data_type) {
     switch (data_type) {
@@ -252,6 +133,7 @@ bool Engine::loadNetwork(std::string trtModelPath) {
   // Create an engine, a representation of the optimized model.
   m_engine = std::unique_ptr<nvinfer1::ICudaEngine>(
       m_runtime->deserializeCudaEngine(buffer.data(), buffer.size()));
+  
   if (!m_engine) {
     return false;
   }
@@ -281,29 +163,28 @@ bool Engine::loadNetwork(std::string trtModelPath) {
     const auto tensorShape =
         m_engine->getTensorShape(tensorName);  // getBindingDimensions
     const auto tensorDataType = m_engine->getTensorDataType(tensorName);
-    if (tensorType == nvinfer1::TensorIOMode::kINPUT) {
-      // Store the input dims for later use
-      input_map_[tensorName].dims = tensorShape;
-      input_map_[tensorName].data_type = tensorDataType;
-      // input_map_[tensorName].tensor_length = tensor_length;
-      // Util::checkCudaErrorCode(cudaMallocAsync(
-      //     &input_map_[tensorName].buffer, tensor_length * sizeof(T),
-      //     stream));
-
-    } else if (tensorType == nvinfer1::TensorIOMode::kOUTPUT) {
-      
-      // The binding is an output
-      uint32_t tensor_length = 1;
-      haveDynamicDims_ = tensorShape.d[1] == -1 || tensorShape.d[2] == -1 ||
-                         tensorShape.d[3] == -1;
-      if (haveDynamicDims_) {
-        tensor_length = getMaxOutputLength(tensorShape);
-      } else {
-        for (int j = 1; j < tensorShape.nbDims; ++j) {
+    uint32_t tensor_length = 1;
+    for (int j = 1; j < tensorShape.nbDims; ++j) {
           // We ignore j = 0 because that is the batch size, and we will take
           // that into account when sizing the buffer
           tensor_length *= tensorShape.d[j];
         }
+    if (tensorType == nvinfer1::TensorIOMode::kINPUT) {
+      // Store the input dims for later use
+      input_map_[tensorName].dims = tensorShape;
+      input_map_[tensorName].data_type = tensorDataType;
+      input_map_[tensorName].tensor_length = tensor_length;
+      Util::checkCudaErrorCode(cudaMallocAsync(
+          &input_map_[tensorName].buffer, tensor_length * toSizeOf(tensorDataType),
+          stream));
+
+    } else if (tensorType == nvinfer1::TensorIOMode::kOUTPUT) {
+      // The binding is an output
+      
+      haveDynamicDims_ = tensorShape.d[1] == -1 || tensorShape.d[2] == -1 ||
+                         tensorShape.d[3] == -1;
+      if (haveDynamicDims_) {
+        tensor_length = getMaxOutputLength(tensorShape);
       }
       // Now size the output buffer appropriately, taking into account the max
       // possible batch size (although we could actually end up using less
@@ -311,7 +192,6 @@ bool Engine::loadNetwork(std::string trtModelPath) {
       output_map_[tensorName].dims = tensorShape;
       output_map_[tensorName].tensor_length = tensor_length;
       output_map_[tensorName].data_type = tensorDataType;
-      //TODO not sure
       Util::checkCudaErrorCode(cudaMallocAsync(
           &output_map_[tensorName].buffer, tensor_length * toSizeOf(tensorDataType), stream));
 
@@ -502,49 +382,14 @@ bool Engine::build(const std::string& onnxModelPath) {
   config->addOptimizationProfile(optProfile);
   // Set the precision level
   const auto engineName = serializeEngineOptions(m_options, onnxModelPath);
-  if (m_options.precision == Precision::FP16) {
-    // Ensure the GPU supports FP16 inference
-    if (!builder->platformHasFastFp16()) {
-      auto msg = "Error: GPU does not support FP16 precision";
-      spdlog::error(msg);
-      throw std::runtime_error(msg);
-    }
-    config->setFlag(nvinfer1::BuilderFlag::kFP16);
-  } else if (m_options.precision == Precision::INT8) {
-    if (numInputs > 1) {
-      auto msg =
-          "Error, this implementation currently only supports INT8 "
-          "quantization for single input models";
-      spdlog::error(msg);
-      throw std::runtime_error(msg);
-    }
-
-    // Ensure the GPU supports INT8 Quantization
-    if (!builder->platformHasFastInt8()) {
-      auto msg = "Error: GPU does not support INT8 precision";
-      spdlog::error(msg);
-      throw std::runtime_error(msg);
-    }
-
-    // Ensure the user has provided path to calibration data directory
-    if (m_options.calibrationDataDirectoryPath.empty()) {
-      auto msg =
-          "Error: If INT8 precision is selected, must provide path to "
-          "calibration data directory to Engine::build method";
-      throw std::runtime_error(msg);
-    }
-    config->setFlag((nvinfer1::BuilderFlag::kINT8));
-
-    const auto input = network->getInput(0);
-    const auto inputName = input->getName();
-    const auto inputDims = input->getDimensions();
-    const auto calibrationFileName = engineName + ".calibration";
-
-    m_calibrator = std::make_unique<Int8EntropyCalibrator2>(
-        m_options.calibrationBatchSize, inputDims.d[3], inputDims.d[2],
-        m_options.calibrationDataDirectoryPath, calibrationFileName, inputName);
-    config->setInt8Calibrator(m_calibrator.get());
+  // Ensure the GPU supports FP16 inference
+  if (!builder->platformHasFastFp16()) {
+    auto msg = "Error: GPU does not support FP16 precision";
+    spdlog::error(msg);
+    throw std::runtime_error(msg);
   }
+  config->setFlag(nvinfer1::BuilderFlag::kTF32);
+
 
   // CUDA stream used for profiling by the builder.
   cudaStream_t profileStream;
@@ -572,24 +417,24 @@ bool Engine::build(const std::string& onnxModelPath) {
 }
 
 bool Engine::runInference(
-    cv::cuda::GpuMat &input,
+    float* input_buff,
     std::unordered_map<std::string, std::vector<float>> &feature_vectors) {
-  if (input.empty()) {
-    spdlog::error("Provided input vector is empty!");
-    return false;
-  }
   // Create the cuda stream that will be used for inference
   cudaStream_t inferenceCudaStream;
   Util::checkCudaErrorCode(cudaStreamCreate(&inferenceCudaStream));
-  input_map_[input_map_.begin()->first].tensor_length =
-      input.cols * input.rows * input.channels();
-
-  // Set the address of the input buffers
+  // Set the address of the input buffers and copy cpu to gpu buffer
+  // Copy the output
+  Util::checkCudaErrorCode(
+        cudaMemcpyAsync(input_map_.begin()->second.buffer, input_buff,
+                         input_map_.begin()->second.tensor_length,
+                        cudaMemcpyHostToDevice, inferenceCudaStream));
+  
   bool status = m_context->setTensorAddress(input_map_.begin()->first.c_str(),
-                                            input.ptr<void>());
+                                            input_map_.begin()->second.buffer);
   if (!status) {
     return false;
   }
+   // Set the address of the output buffers 
   for (auto it = output_map_.begin(); it != output_map_.end(); ++it) {
     bool status =
         m_context->setTensorAddress(it->first.c_str(), it->second.buffer);
@@ -622,83 +467,83 @@ bool Engine::runInference(
                         it->second.tensor_length * toSizeOf(it->second.data_type),
                         cudaMemcpyDeviceToHost, inferenceCudaStream));
   }
-
+ 
   // Synchronize the cuda stream
   Util::checkCudaErrorCode(cudaStreamSynchronize(inferenceCudaStream));
   Util::checkCudaErrorCode(cudaStreamDestroy(inferenceCudaStream));
   return true;
 }
-bool Engine::runInference(
-      cv::cuda::GpuMat &input,
-      std::unordered_map<std::string, std::vector<float>> &feature_f_vectors,
-      std::unordered_map<std::string, std::vector<int32_t>> &feature_int_vectors)
-  {
+// bool Engine::runInference(
+//       float* input_buff,
+//       std::unordered_map<std::string, std::vector<float>> &feature_f_vectors,
+//       std::unordered_map<std::string, std::vector<int32_t>> &feature_int_vectors)
+//   {
 
-    if (input.empty()) {
-      spdlog::error("Provided input vector is empty!");
-      return false;
-    }
-    // Create the cuda stream that will be used for inference
-    cudaStream_t inferenceCudaStream;
-    Util::checkCudaErrorCode(cudaStreamCreate(&inferenceCudaStream));
-    input_map_[input_map_.begin()->first].tensor_length =
-        input.cols * input.rows * input.channels();
+//     if (input.empty()) {
+//       spdlog::error("Provided input vector is empty!");
+//       return false;
+//     }
+//     // Create the cuda stream that will be used for inference
+//     cudaStream_t inferenceCudaStream;
+//     Util::checkCudaErrorCode(cudaStreamCreate(&inferenceCudaStream));
+//     input_map_[input_map_.begin()->first].tensor_length =
+//         input.cols * input.rows * input.channels();
 
-    // Set the address of the input buffers
-    bool status = m_context->setTensorAddress(input_map_.begin()->first.c_str(),
-                                              input.ptr<void>());
-    if (!status) {
-      return false;
-    }
-    for (auto it = output_map_.begin(); it != output_map_.end(); ++it) {
-      bool status =
-          m_context->setTensorAddress(it->first.c_str(), it->second.buffer);
-      if (!status) {
-        return false;
-      }
-    }
-    if (!m_context->allInputDimensionsSpecified()) {
-      auto msg = "Error, not all required dimensions specified.";
-      spdlog::error(msg);
-      throw std::runtime_error(msg);
-    }
-    // Run inference.
-    status = m_context->enqueueV3(inferenceCudaStream);
-    if (!status) {
-      return false;
-    }
-    // Copy the outputs back to CPU
-    for (auto it = output_map_.begin(); it != output_map_.end(); ++it) {
-      if(it->second.data_type == nvinfer1::DataType::kFLOAT )
-      {
-        feature_f_vectors[it->first].resize(it->second.tensor_length);
-        // Copy the output
-        Util::checkCudaErrorCode(
-            cudaMemcpyAsync(feature_f_vectors[it->first].data(), it->second.buffer,
-                            it->second.tensor_length * toSizeOf(it->second.data_type),
-                            cudaMemcpyDeviceToHost, inferenceCudaStream));  
-      }
-      else if(it->second.data_type == nvinfer1::DataType::kINT32)
-      {
-        feature_int_vectors[it->first].resize(it->second.tensor_length);
-        // Copy the output
-        Util::checkCudaErrorCode(
-            cudaMemcpyAsync(feature_int_vectors[it->first].data(), it->second.buffer,
-                            it->second.tensor_length * toSizeOf(it->second.data_type),
-                            cudaMemcpyDeviceToHost, inferenceCudaStream));
-      }
-      else{
-        auto msg = "Unknown output type";
-        spdlog::error(msg);
-        throw std::runtime_error(msg);
-      }
-    }
+//     // Set the address of the input buffers
+//     bool status = m_context->setTensorAddress(input_map_.begin()->first.c_str(),
+//                                               input.ptr<void>());
+//     if (!status) {
+//       return false;
+//     }
+//     for (auto it = output_map_.begin(); it != output_map_.end(); ++it) {
+//       bool status =
+//           m_context->setTensorAddress(it->first.c_str(), it->second.buffer);
+//       if (!status) {
+//         return false;
+//       }
+//     }
+//     if (!m_context->allInputDimensionsSpecified()) {
+//       auto msg = "Error, not all required dimensions specified.";
+//       spdlog::error(msg);
+//       throw std::runtime_error(msg);
+//     }
+//     // Run inference.
+//     status = m_context->enqueueV3(inferenceCudaStream);
+//     if (!status) {
+//       return false;
+//     }
+//     // Copy the outputs back to CPU
+//     for (auto it = output_map_.begin(); it != output_map_.end(); ++it) {
+//       if(it->second.data_type == nvinfer1::DataType::kFLOAT )
+//       {
+//         feature_f_vectors[it->first].resize(it->second.tensor_length);
+//         // Copy the output
+//         Util::checkCudaErrorCode(
+//             cudaMemcpyAsync(feature_f_vectors[it->first].data(), it->second.buffer,
+//                             it->second.tensor_length * toSizeOf(it->second.data_type),
+//                             cudaMemcpyDeviceToHost, inferenceCudaStream));  
+//       }
+//       else if(it->second.data_type == nvinfer1::DataType::kINT32)
+//       {
+//         feature_int_vectors[it->first].resize(it->second.tensor_length);
+//         // Copy the output
+//         Util::checkCudaErrorCode(
+//             cudaMemcpyAsync(feature_int_vectors[it->first].data(), it->second.buffer,
+//                             it->second.tensor_length * toSizeOf(it->second.data_type),
+//                             cudaMemcpyDeviceToHost, inferenceCudaStream));
+//       }
+//       else{
+//         auto msg = "Unknown output type";
+//         spdlog::error(msg);
+//         throw std::runtime_error(msg);
+//       }
+//     }
 
-    // Synchronize the cuda stream
-    Util::checkCudaErrorCode(cudaStreamSynchronize(inferenceCudaStream));
-    Util::checkCudaErrorCode(cudaStreamDestroy(inferenceCudaStream));
-    return true;
-  }
+//     // Synchronize the cuda stream
+//     Util::checkCudaErrorCode(cudaStreamSynchronize(inferenceCudaStream));
+//     Util::checkCudaErrorCode(cudaStreamDestroy(inferenceCudaStream));
+//     return true;
+//   }
 
 
 

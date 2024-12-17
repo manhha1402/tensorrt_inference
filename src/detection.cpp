@@ -36,25 +36,32 @@ Detection::Detection(const std::string &model_name,
 std::vector<Object> Detection::detect(
     const cv::Mat &inputImageBGR, const DetectionParams &params,
     const std::vector<std::string> &detected_class) {
+      std::unordered_map<std::string, std::vector<float>> feature_vectors;
+      std::cout<<"doInference"<<std::endl;
+      bool res =  doInference(inputImageBGR, feature_vectors);
+
+      std::vector<Object> ret =
+      postprocess(feature_vectors, params, detected_class);
+      return ret;
   // Upload the image to GPU memory
-  cv::cuda::GpuMat gpuImg;
-  gpuImg.upload(inputImageBGR);
+  // cv::cuda::GpuMat gpuImg;
+  // gpuImg.upload(inputImageBGR);
   // Call detectObjects with the GPU image
-  return detect(gpuImg, params, detected_class);
+  //return detect(gpuImg, params, detected_class);
 }
 
-std::vector<Object> Detection::detect(
-    cv::cuda::GpuMat &inputImageBGR, const DetectionParams &params,
-    const std::vector<std::string> &detected_class) {
-  std::unordered_map<std::string, std::vector<float>> feature_vectors;
-  std::cout<<"doInference"<<std::endl;
-  doInference(inputImageBGR, feature_vectors);
-  inputImageBGR.release();
-  // Check if our model does only object detection or also supports segmentation
-  std::vector<Object> ret =
-      postprocess(feature_vectors, params, detected_class);
-  return ret;
-}
+// std::vector<Object> Detection::detect(
+//     cv::cuda::GpuMat &inputImageBGR, const DetectionParams &params,
+//     const std::vector<std::string> &detected_class) {
+//   std::unordered_map<std::string, std::vector<float>> feature_vectors;
+//   std::cout<<"doInference"<<std::endl;
+//   doInference(inputImageBGR, feature_vectors);
+//   inputImageBGR.release();
+//   // Check if our model does only object detection or also supports segmentation
+//   std::vector<Object> ret =
+//       postprocess(feature_vectors, params, detected_class);
+//   return ret;
+// }
 
 void Detection::drawBBoxLabel(cv::Mat &image, const Object &object,
                               const DetectionParams &params,

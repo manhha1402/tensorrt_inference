@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 message(STATUS "Configuring with CMake ${CMAKE_VERSION}")
 project(tensorrt_inference VERSION 0.0.1
                DESCRIPTION "TensorRT Inference"
-               LANGUAGES CXX)
+               LANGUAGES C CXX CUDA)
 # Use ccache to speed up rebuilds
 include(cmake/ccache.cmake)
 
@@ -10,11 +10,7 @@ include(cmake/ccache.cmake)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Ofast -DNDEBUG -Wno-deprecated-declarations")
 
-# CMake Options
-option(ENABLE_BENCHMARKS "Benchmark the preprocessing, inference, and post processing" OFF)
-if (ENABLE_BENCHMARKS)
-    add_compile_definitions(ENABLE_BENCHMARKS)
-endif()
+
 # For finding FindTensorRT.cmake
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 option(BUILD_PYTHON_BINDING "Build Python binding" ON)
@@ -49,7 +45,7 @@ add_library(${PROJECT_NAME}_lib SHARED
                 
                 src/detection.cpp
                 src/yolov8.cpp
-                # src/yolov9.cpp
+                #src/yolov9.cpp
                 # src/retinaface.cpp
                 # src/face_recognition.cpp
                 # src/paddle_ocr/clipper.cpp

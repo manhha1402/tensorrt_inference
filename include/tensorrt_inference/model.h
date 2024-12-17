@@ -18,12 +18,12 @@ class Model {
           std::filesystem::path(std::getenv("HOME")) / "data" / "weights");
   ~Model();
   bool doInference(
-      cv::cuda::GpuMat &gpuImg,
+      const cv::Mat &img,
       std::unordered_map<std::string, std::vector<float>> &feature_vectors);
-  bool doInference(
-    cv::cuda::GpuMat &gpuImg,
-    std::unordered_map<std::string, std::vector<float>> &feature_f_vectors,
-      std::unordered_map<std::string, std::vector<int32_t>> &feature_int_vectors);
+  // bool doInference(
+  //   cv::Mat &img,
+  //   std::unordered_map<std::string, std::vector<float>> &feature_f_vectors,
+  //     std::unordered_map<std::string, std::vector<int32_t>> &feature_int_vectors);
   std::unique_ptr<Engine> m_trtEngine = nullptr;
 
  protected:
@@ -34,12 +34,14 @@ class Model {
   //    subVals = {0.0f, 0.0f, 0.0f};
   //    divVals = {1.f, 1.f, 1.f};
   //    normalize = false;
-  cv::cuda::GpuMat preprocess(const cv::cuda::GpuMat &gpuImg);
-  std::string onnx_file_;
+  //cv::cuda::GpuMat preprocess(const cv::cuda::GpuMat &gpuImg);
 
-  float m_ratio = 1.0;
-  float input_frame_h_ = 0;
-  float input_frame_w_ = 0;
+  float* preProcess(const cv::Mat& img);
+  
+
+  std::string onnx_file_;
+  std::vector<float> factors_;
+
   std::vector<float> sub_vals_{0, 0, 0};
   std::vector<float> div_vals_{1.0f, 1.0f, 1.0f};
   bool normalized_ = false;
