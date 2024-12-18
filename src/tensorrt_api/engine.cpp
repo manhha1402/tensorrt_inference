@@ -417,17 +417,16 @@ bool Engine::build(const std::string& onnxModelPath) {
 }
 
 bool Engine::runInference(
-    float* input_buff,
     std::unordered_map<std::string, std::vector<float>> &feature_vectors) {
   // Create the cuda stream that will be used for inference
   cudaStream_t inferenceCudaStream;
   Util::checkCudaErrorCode(cudaStreamCreate(&inferenceCudaStream));
   // Set the address of the input buffers and copy cpu to gpu buffer
   // Copy the output
-  Util::checkCudaErrorCode(
-        cudaMemcpyAsync(input_map_.begin()->second.buffer, input_buff,
-                         input_map_.begin()->second.tensor_length,
-                        cudaMemcpyHostToDevice, inferenceCudaStream));
+  // Util::checkCudaErrorCode(
+  //       cudaMemcpyAsync(input_map_.begin()->second.buffer, input_buff,
+  //                        input_map_.begin()->second.tensor_length,
+  //                       cudaMemcpyHostToDevice, inferenceCudaStream));
   
   bool status = m_context->setTensorAddress(input_map_.begin()->first.c_str(),
                                             input_map_.begin()->second.buffer);

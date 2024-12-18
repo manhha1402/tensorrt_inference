@@ -1,4 +1,6 @@
 #include <tensorrt_inference/model.h>
+#include <opencv2/cudaimgproc.hpp>
+#include <opencv2/cudawarping.hpp>
 namespace tensorrt_inference {
 Model::Model(const std::string &model_name, tensorrt_inference::Options options,
              const std::filesystem::path &model_dir) {
@@ -7,8 +9,6 @@ Model::Model(const std::string &model_name, tensorrt_inference::Options options,
 
   onnx_file_ =
       (model_dir / model_name / config["onnx_file"].as<std::string>()).string();
-  std::cout << onnx_file_ << std::endl;
-
   if (config["num_kps"]) {
     num_kps_ = config["num_kps"].as<int>();
   }
@@ -24,6 +24,9 @@ Model::Model(const std::string &model_name, tensorrt_inference::Options options,
   if (config["div_vals"]) {
     div_vals_ = config["div_vals"].as<std::vector<float>>();
   }
+  if (config["keep_ratio"]) {
+    keep_ratio_ = config["keep_ratio"].as<bool>();
+  }
   // Specify options for GPU inference
   options.engine_file_dir = getFolderOfFile(onnx_file_);
   m_trtEngine = std::make_unique<Engine>(options);
@@ -38,37 +41,44 @@ Model::Model(const std::string &model_name, tensorrt_inference::Options options,
 }
 Model::~Model() {}
 
-float* Model::preProcess(const cv::Mat& img){
+bool Model::preProcess(const cv::Mat& img){
   cv::Mat mat;
   cv::cvtColor(img, mat, cv::COLOR_BGR2RGB);
   int maxImageLength = img.cols > img.rows ? img.cols : img.rows;
   const auto &input_info = m_trtEngine->getInputInfo().begin();
-  if ( (input_info->second.dims.d[2] == input_info->second.dims.d[3]))
-    {
-        factors_.emplace_back(maxImageLength / 640.0);
-        factors_.emplace_back(maxImageLength / 640.0);
-    }
-    else
-    {
-        factors_.emplace_back(img.rows / 640.0);
-        factors_.emplace_back(img.cols / 640.0);
-    }
-
-  float* input_buff = (float*)malloc(input_info->second.tensor_length * sizeof(float));
-
-  cv::Mat maxImage = cv::Mat::zeros(maxImageLength, maxImageLength, CV_8UC3);
-  maxImage = maxImage * 255;
-  cv::Rect roi(0, 0, img.cols, img.rows);
-  mat.copyTo(cv::Mat(maxImage, roi));
+  
+  input_frame_w_ = img.cols;
+  input_frame_h_ = img.rows;
+  std::vector<float> input_buff(input_info->second.tensor_length);
   cv::Mat resizeImg;
-  int length = 640;
+  if(keep_ratio_)
+  {
+    ratios_[0] = ratios_[1] = std::max(float(img.cols) / float(input_info->second.dims.d[3]), float(img.rows)/ float(input_info->second.dims.d[3]));
+    float resize_ratio = std::min(float(input_info->second.dims.d[3]) / float(img.cols), float(input_info->second.dims.d[2]) / float(img.rows));
+    resizeImg = cv::Mat::zeros(cv::Size(input_info->second.dims.d[3], input_info->second.dims.d[2]), CV_8UC3);
+    cv::Mat rsz_img;
+    cv::resize(mat, rsz_img, cv::Size(), resize_ratio, resize_ratio);
+    rsz_img.copyTo(resizeImg(cv::Rect(0, 0, rsz_img.cols, rsz_img.rows)));
+  }
+  else 
+  {
+    ratios_[0] =  float(img.cols) / float(input_info->second.dims.d[3]);
+    ratios_[1] = float(img.rows) / float(input_info->second.dims.d[2]);
+    cv::resize(mat, resizeImg, cv::Size(input_info->second.dims.d[3], input_info->second.dims.d[2]));
+  }
 
-  cv::resize(maxImage, resizeImg, cv::Size(length, length), 0.0f, 0.0f, cv::INTER_LINEAR);
   resizeImg.convertTo(resizeImg, CV_32FC3, 1 / 255.0);
   for (int i = 0; i < resizeImg.channels(); ++i) {
-      cv::extractChannel(resizeImg, cv::Mat(resizeImg.rows, resizeImg.cols, CV_32FC1, input_buff + i * resizeImg.rows * resizeImg.cols), i);
+      cv::extractChannel(resizeImg, cv::Mat(resizeImg.rows, resizeImg.cols, CV_32FC1, input_buff.data() + i * resizeImg.rows * resizeImg.cols), i);
   }
-  return input_buff;  
+  cudaStream_t inferenceCudaStream;
+  Util::checkCudaErrorCode(cudaStreamCreate(&inferenceCudaStream));
+  Util::checkCudaErrorCode(
+        cudaMemcpyAsync(m_trtEngine->input_map_.begin()->second.buffer, input_buff.data(),
+                         m_trtEngine->input_map_.begin()->second.tensor_length,
+                        cudaMemcpyHostToDevice, inferenceCudaStream));
+  
+  return true;  
 }
 
 
@@ -140,9 +150,10 @@ float* Model::preProcess(const cv::Mat& img){
 bool Model::doInference(
     const cv::Mat &img,
     std::unordered_map<std::string, std::vector<float>> &feature_vectors) {
-  auto input_buff = preProcess(img);
+    bool res = preProcess(img);
+
       std::cout<<"runInference"<<std::endl;
-  auto succ = m_trtEngine->runInference(input_buff, feature_vectors);
+  auto succ = m_trtEngine->runInference(feature_vectors);
   if (!succ) {
     spdlog::error("Error: Unable to run inference.");
     return false;

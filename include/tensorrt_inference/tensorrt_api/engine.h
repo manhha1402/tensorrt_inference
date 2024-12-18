@@ -104,13 +104,15 @@ class Engine {
   // Input format [input][batch][cv::cuda::GpuMat]
   // Output format [batch][output][feature_vector]
   bool runInference(
-      float* input_buff,
       std::unordered_map<std::string, std::vector<float>> &feature_vectors);
   bool runInference(
       float* input_buff,
       std::unordered_map<std::string, std::vector<float>> &feature_f_vectors,
       std::unordered_map<std::string, std::vector<int32_t>> &feature_int_vectors);
 
+ // Holds pointers to the input and output GPU buffers
+  std::unordered_map<std::string, NetInfo> input_map_;
+  std::unordered_map<std::string, NetInfo> output_map_;
 
 
   // Utility method for resizing an image while maintaining the aspect ratio by
@@ -173,10 +175,7 @@ class Engine {
 
   void clearGpuBuffers();
 
-  // Holds pointers to the input and output GPU buffers
-  std::unordered_map<std::string, NetInfo> input_map_;
-  std::unordered_map<std::string, NetInfo> output_map_;
-
+ 
   // Must keep IRuntime around for inference, see:
   // https://forums.developer.nvidia.com/t/is-it-safe-to-deallocate-nvinfer1-iruntime-after-creating-an-nvinfer1-icudaengine-but-before-running-inference-with-said-icudaengine/255381/2?u=cyruspk4w6
   std::unique_ptr<nvinfer1::IRuntime> m_runtime = nullptr;

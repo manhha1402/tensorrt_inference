@@ -36,8 +36,7 @@ class Model {
   //    normalize = false;
   //cv::cuda::GpuMat preprocess(const cv::cuda::GpuMat &gpuImg);
 
-  float* preProcess(const cv::Mat& img);
-  
+  bool preProcess(const cv::Mat& img);
 
   std::string onnx_file_;
   std::vector<float> factors_;
@@ -47,5 +46,8 @@ class Model {
   bool normalized_ = false;
   bool swapBR_ = true;
   int num_kps_ = 17;
+  bool keep_ratio_ = true;
+  std::vector<float> ratios_{1,1};
+  int input_frame_w_, input_frame_h_;
 };
 }  // namespace tensorrt_inference

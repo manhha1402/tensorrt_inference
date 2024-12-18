@@ -37,9 +37,7 @@ std::vector<Object> Detection::detect(
     const cv::Mat &inputImageBGR, const DetectionParams &params,
     const std::vector<std::string> &detected_class) {
       std::unordered_map<std::string, std::vector<float>> feature_vectors;
-      std::cout<<"doInference"<<std::endl;
       bool res =  doInference(inputImageBGR, feature_vectors);
-
       std::vector<Object> ret =
       postprocess(feature_vectors, params, detected_class);
       return ret;
