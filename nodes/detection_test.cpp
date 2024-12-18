@@ -14,11 +14,12 @@ int main(int argc, char *argv[]) {
   }
   std::string model_name = argv[2];
   std::shared_ptr<tensorrt_inference::Detection> detection;
-  // if (model_name.find("yolov8") != std::string::npos) {
-  //   detection = std::make_shared<tensorrt_inference::YoloV8>(model_name);
-  // } else if (model_name.find("yolov9") != std::string::npos) {
-  //   detection = std::make_shared<tensorrt_inference::YoloV9>(model_name);
-  // } else if (model_name.find("facedetector") != std::string::npos) {
+  if (model_name.find("yolov8") != std::string::npos) {
+    detection = std::make_shared<tensorrt_inference::YoloV8>(model_name);
+  } else if (model_name.find("yolov9") != std::string::npos) {
+    detection = std::make_shared<tensorrt_inference::YoloV9>(model_name);
+  } 
+  //else if (model_name.find("facedetector") != std::string::npos) {
   //   detection = std::make_shared<tensorrt_inference::RetinaFace>(model_name);
   // } else if (model_name.find("retinaface") != std::string::npos) {
   //   detection = std::make_shared<tensorrt_inference::RetinaFace>(model_name);
@@ -29,7 +30,7 @@ int main(int argc, char *argv[]) {
   //   return 1;
   // }
 
-  detection = std::make_shared<tensorrt_inference::YoloV8>(model_name);
+  //detection = std::make_shared<tensorrt_inference::YoloV8>(model_name);
 
   // Run inference
   tensorrt_inference::DetectionParams params(0.5, 0.5, 0.5, 0.5, 20);

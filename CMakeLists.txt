@@ -45,7 +45,7 @@ add_library(${PROJECT_NAME}_lib SHARED
                 
                 src/detection.cpp
                 src/yolov8.cpp
-                #src/yolov9.cpp
+                src/yolov9.cpp
                 # src/retinaface.cpp
                 # src/face_recognition.cpp
                 # src/paddle_ocr/clipper.cpp
