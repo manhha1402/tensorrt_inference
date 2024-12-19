@@ -5,11 +5,13 @@
 #include "tensorrt_inference/tensorrt_inference.h"
 
 // Runs object detection on video stream then displays annotated results.
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
   // Read the input image
   std::string inputImage = argv[1];
   auto img = cv::imread(inputImage);
-  if (img.empty()) {
+  if (img.empty())
+  {
     std::cout << "Error: Unable to read image at path '" << inputImage << "'"
               << std::endl;
     return -1;
@@ -35,7 +37,8 @@ int main(int argc, char *argv[]) {
   auto plates = tensorrt_inference::getCroppedObjects(img, objects, img.cols,
                                                       img.rows, false);
   int k = 0;
-  for (const auto &plate : plates) {
+  for (const auto &plate : plates)
+  {
     cv::imwrite("cropped_" + std::to_string(k) + ".jpg", plate.croped_object);
     k++;
   }
@@ -53,7 +56,8 @@ int main(int argc, char *argv[]) {
   auto paddle_ocr = std::make_shared<tensorrt_inference::PaddleOCR>(
       model_name, options_det, options_rec, model_dir);
   std::vector<cv::cuda::GpuMat> img_list;
-  for (size_t i = 0; i < plates.size(); i++) {
+  for (size_t i = 0; i < plates.size(); i++)
+  {
     auto result = paddle_ocr->runInference(img, plates[i]);
     plates[i].rec_score = result.second;
     plates[i].label = result.first;
@@ -63,18 +67,22 @@ int main(int argc, char *argv[]) {
   }
   plates.erase(
       std::remove_if(plates.begin(), plates.end(),
-                     [&](const tensorrt_inference::CroppedObject &plate) {
+                     [&](const tensorrt_inference::CroppedObject &plate)
+                     {
                        return plate.rec_score < 0.8;
                      }),
       plates.end());
-  if (!plates.empty()) {
+  if (!plates.empty())
+  {
     cv::Mat rec = tensorrt_inference::drawBBoxLabels(img, plates, 1);
     cv::imshow("result", rec);
     cv::waitKey(0);
     outputName =
         inputImage.substr(0, inputImage.find_last_of('.')) + "_rec.jpg";
     cv::imwrite(outputName, rec);
-  } else {
+  }
+  else
+  {
     std::cout << "no detection" << std::endl;
   }
 

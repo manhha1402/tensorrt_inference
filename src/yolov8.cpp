@@ -43,14 +43,19 @@ namespace tensorrt_inference
     cv::Mat outputs(dimensions, rows, CV_32F, feature_vectors.at("output0").data());
     outputs = outputs.reshape(1, dimensions);
     cv::transpose(outputs, outputs);
-    float *data = (float *)outputs.data;
+
+    std::vector<float> output_data(outputs.rows * outputs.cols);
+    std::memcpy(output_data.data(), outputs.ptr<float>(), output_data.size() * sizeof(float));
+
     std::vector<cv::Rect> bboxes;
     std::vector<float> confidences;
     std::vector<int> labels;
 
     for (int i = 0; i < rows; ++i)
     {
-      float *classes_scores = data + 4;
+      float *row_data = &output_data[i * dimensions]; // Access row data
+
+      float *classes_scores = row_data + 4; // number of classes
       cv::Mat scores(1, class_labels_.size(), CV_32FC1, classes_scores);
       cv::Point class_id;
       double max_class_score;
@@ -63,10 +68,10 @@ namespace tensorrt_inference
         {
           confidences.push_back(max_class_score);
           labels.push_back(class_id.x);
-          float x = data[0];
-          float y = data[1];
-          float w = data[2];
-          float h = data[3];
+          float x = row_data[0];
+          float y = row_data[1];
+          float w = row_data[2];
+          float h = row_data[3];
 
           int left = int((x - 0.5 * w) * ratios_[0]);
           int top = int((y - 0.5 * h) * ratios_[1]);
@@ -81,10 +86,10 @@ namespace tensorrt_inference
           {
             confidences.push_back(max_class_score);
             labels.push_back(class_id.x);
-            float x = data[0];
-            float y = data[1];
-            float w = data[2];
-            float h = data[3];
+            float x = row_data[0];
+            float y = row_data[1];
+            float w = row_data[2];
+            float h = row_data[3];
 
             int left = int((x - 0.5 * w) * ratios_[0]);
             int top = int((y - 0.5 * h) * ratios_[1]);
@@ -94,7 +99,7 @@ namespace tensorrt_inference
           }
         }
       }
-      data += dimensions;
+      // data += dimensions;
     }
     std::vector<int> indices;
     // Run NMS
@@ -134,7 +139,8 @@ namespace tensorrt_inference
     cv::Mat outputs(dimensions, rows, CV_32F, feature_vectors.at("output0").data());
     outputs = outputs.reshape(1, dimensions);
     cv::transpose(outputs, outputs);
-    float *data = (float *)outputs.data;
+    std::vector<float> output_data(outputs.rows * outputs.cols);
+    std::memcpy(output_data.data(), outputs.ptr<float>(), output_data.size() * sizeof(float));
 
     const int num_net0_channels = output0_info.dims.d[1];
     const int num_seg_channels = output1_info.dims.d[1];
@@ -154,13 +160,15 @@ namespace tensorrt_inference
     // Object the bounding boxes and class labels
     for (int i = 0; i < rows; i++)
     {
-      float *classes_scores = data + 4;
+      float *row_data = &output_data[i * dimensions]; // Access row data
+
+      float *classes_scores = row_data + 4; // number of classes
       cv::Mat scores(1, class_labels_.size(), CV_32FC1, classes_scores);
       cv::Point class_id;
       double max_class_score;
       cv::minMaxLoc(scores, 0, &max_class_score, 0, &class_id);
 
-      auto maskConfsPtr = data + 4 + numClasses;
+      auto maskConfsPtr = row_data + 4 + numClasses;
       if (max_class_score > params.obj_threshold)
       {
         if (detected_class.empty() ||
@@ -169,10 +177,10 @@ namespace tensorrt_inference
         {
           confidences.push_back(max_class_score);
           labels.push_back(class_id.x);
-          float x = data[0];
-          float y = data[1];
-          float w = data[2];
-          float h = data[3];
+          float x = row_data[0];
+          float y = row_data[1];
+          float w = row_data[2];
+          float h = row_data[3];
 
           int left = int((x - 0.5 * w) * ratios_[0]);
           int top = int((y - 0.5 * h) * ratios_[1]);
@@ -190,10 +198,10 @@ namespace tensorrt_inference
           {
             confidences.push_back(max_class_score);
             labels.push_back(class_id.x);
-            float x = data[0];
-            float y = data[1];
-            float w = data[2];
-            float h = data[3];
+            float x = row_data[0];
+            float y = row_data[1];
+            float w = row_data[2];
+            float h = row_data[3];
 
             int left = int((x - 0.5 * w) * ratios_[0]);
             int top = int((y - 0.5 * h) * ratios_[1]);
@@ -206,7 +214,6 @@ namespace tensorrt_inference
           }
         }
       }
-      data += dimensions;
     }
 
     // Require OpenCV 4.7 for this function
@@ -276,7 +283,10 @@ namespace tensorrt_inference
     cv::Mat outputs(dimensions, rows, CV_32F, feature_vectors.at("output0").data());
     outputs = outputs.reshape(1, dimensions);
     cv::transpose(outputs, outputs);
-    float *data = (float *)outputs.data;
+    // float *data = (float *)outputs.data;
+    std::vector<float> output_data(outputs.rows * outputs.cols);
+    std::memcpy(output_data.data(), outputs.ptr<float>(), output_data.size() * sizeof(float));
+
     std::vector<cv::Rect> bboxes;
     std::vector<float> confidences;
     std::vector<int> labels;
@@ -284,8 +294,10 @@ namespace tensorrt_inference
 
     for (int i = 0; i < rows; ++i)
     {
-      float *classes_scores = data + 4;
-      auto kps_ptr = data + 5;
+      float *row_data = &output_data[i * dimensions]; // Access row data
+
+      float *classes_scores = row_data + 4; // number of classes
+      auto kps_ptr = row_data + 5;
       cv::Point class_id;
       float max_class_score = *classes_scores;
       if (max_class_score > params.obj_threshold)
@@ -296,10 +308,10 @@ namespace tensorrt_inference
         {
           confidences.push_back(max_class_score);
           labels.push_back(class_id.x);
-          float x = data[0];
-          float y = data[1];
-          float w = data[2];
-          float h = data[3];
+          float x = row_data[0];
+          float y = row_data[1];
+          float w = row_data[2];
+          float h = row_data[3];
 
           int left = int((x - 0.5 * w) * ratios_[0]);
           int top = int((y - 0.5 * h) * ratios_[1]);
@@ -329,10 +341,10 @@ namespace tensorrt_inference
           {
             confidences.push_back(max_class_score);
             labels.push_back(class_id.x);
-            float x = data[0];
-            float y = data[1];
-            float w = data[2];
-            float h = data[3];
+            float x = row_data[0];
+            float y = row_data[1];
+            float w = row_data[2];
+            float h = row_data[3];
 
             int left = int((x - 0.5 * w) * ratios_[0]);
             int top = int((y - 0.5 * h) * ratios_[1]);
@@ -355,7 +367,6 @@ namespace tensorrt_inference
           }
         }
       }
-      data += dimensions;
     }
     std::vector<int> indices;
 

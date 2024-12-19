@@ -48,9 +48,9 @@ add_library(${PROJECT_NAME}_lib SHARED
                 src/yolov9.cpp
                 src/retinaface.cpp
                 # src/face_recognition.cpp
-                # src/paddle_ocr/clipper.cpp
-                # src/paddle_ocr/paddleocr_utils.cpp
-                # src/paddle_ocr/paddleocr.cpp
+                src/paddle_ocr/clipper.cpp
+                src/paddle_ocr/paddleocr_utils.cpp
+                src/paddle_ocr/paddleocr.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC 
@@ -84,8 +84,8 @@ target_include_directories(
 add_executable(detection_test nodes/detection_test.cpp)
 target_link_libraries(detection_test ${PROJECT_NAME}_lib)
 
-# add_executable(paddleocr_test nodes/paddleocr_test.cpp)
-# target_link_libraries(paddleocr_test ${PROJECT_NAME}_lib)
+add_executable(paddleocr_test nodes/paddleocr_test.cpp)
+target_link_libraries(paddleocr_test ${PROJECT_NAME}_lib)
 
 
 # add_executable(face_rec_test nodes/face_rec_test.cpp)

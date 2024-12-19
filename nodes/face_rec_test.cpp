@@ -4,19 +4,22 @@
 
 // Runs object detection on an input image then saves the annotated image to
 // disk.
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
   std::string inputImage1 = argv[1];
   std::string inputImage2 = argv[2];
   tensorrt_inference::RetinaFace retinaface("facedetector");
   // Read the input image
   auto img1 = cv::imread(inputImage1);
-  if (img1.empty()) {
+  if (img1.empty())
+  {
     std::cout << "Error: Unable to read image at path '" << inputImage1 << "'"
               << std::endl;
     return -1;
   }
   auto img2 = cv::imread(inputImage2);
-  if (img2.empty()) {
+  if (img2.empty())
+  {
     std::cout << "Error: Unable to read image at path '" << inputImage2 << "'"
               << std::endl;
     return -1;
