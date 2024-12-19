@@ -30,6 +30,10 @@ namespace tensorrt_inference
       std::memcpy(output_data.data(), outputs.ptr<float>(), output_data.size() * sizeof(float));
       if (output_data.size() == 33600) //
       {
+        for (const auto &val : it->second)
+        {
+          std::cout << val << std::endl;
+        }
         conf = output_data;
       }
       else if (output_data.size() == 67200)

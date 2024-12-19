@@ -54,6 +54,7 @@ namespace tensorrt_inference
   {
     cv::Mat mat;
     cv::cvtColor(img, mat, cv::COLOR_BGR2RGB);
+
     int maxImageLength = img.cols > img.rows ? img.cols : img.rows;
     const auto &input_info = m_trtEngine->getInputInfo().begin();
 
@@ -76,8 +77,15 @@ namespace tensorrt_inference
       ratios_[1] = float(img.rows) / float(input_info->second.dims.d[2]);
       cv::resize(mat, resizeImg, cv::Size(input_info->second.dims.d[3], input_info->second.dims.d[2]));
     }
+    cv::imwrite("resizeImg.jpg", resizeImg);
+    // resizeImg.convertTo(resizeImg, CV_32FC3, 1 / 255.0);
+    // resizeImg.convertTo(resizeImg, CV_32FC3);
+    cv::subtract(resizeImg, cv::Scalar(104, 117, 123), resizeImg, cv::noArray(), -1);
+    cv::imwrite("resizeImg1.jpg", resizeImg);
 
-    resizeImg.convertTo(resizeImg, CV_32FC3, 1 / 255.0);
+    resizeImg.convertTo(resizeImg, CV_32FC3);
+    cv::imwrite("resizeImg2.jpg", resizeImg);
+
     for (int i = 0; i < resizeImg.channels(); ++i)
     {
       cv::extractChannel(resizeImg, cv::Mat(resizeImg.rows, resizeImg.cols, CV_32FC1, input_buff.data() + i * resizeImg.rows * resizeImg.cols), i);
