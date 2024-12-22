@@ -1,0 +1,12 @@
+onnx_file: "FaceNet_vggface2_optmized.onnx"
+labels_file: "FaceNet_vggface2_optmized.yaml"
+input_names: "input0"
+output_names: ["embedding"]
+sub_vals: [127.5, 127.5, 127.5]
+div_vals: [1.0,1.0, 1.0]
+normalized: True
+swapBR: True
+obj_threshold: 0.2
+nms_threshold: 0.2
+landmark_std:  1
+num_detect: 20

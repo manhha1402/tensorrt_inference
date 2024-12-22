@@ -421,13 +421,6 @@ bool Engine::runInference(
   // Create the cuda stream that will be used for inference
   cudaStream_t inferenceCudaStream;
   Util::checkCudaErrorCode(cudaStreamCreate(&inferenceCudaStream));
-  // Set the address of the input buffers and copy cpu to gpu buffer
-  // Copy the output
-  // Util::checkCudaErrorCode(
-  //       cudaMemcpyAsync(input_map_.begin()->second.buffer, input_buff,
-  //                        input_map_.begin()->second.tensor_length,
-  //                       cudaMemcpyHostToDevice, inferenceCudaStream));
-  
   bool status = m_context->setTensorAddress(input_map_.begin()->first.c_str(),
                                             input_map_.begin()->second.buffer);
   if (!status) {

@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
       std::make_shared<tensorrt_inference::YoloV8>("plate_yolov8n_320_2024");
 
   // Run inference
-  tensorrt_inference::DetectionParams params(0.3, 0.5, 0.5, 0.5, 20);
+  tensorrt_inference::DetectionParams params(0.3, 0.5, 0.5, 0.5, 1);
   std::vector<std::string> detected_classes{"all"};
   const auto objects = detection->detect(img, params, detected_classes);
   std::cout << "Detected " << objects.size() << " objects" << std::endl;

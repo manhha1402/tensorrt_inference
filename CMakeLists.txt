@@ -117,6 +117,14 @@ install(
     DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
+
+# Install data files to the CMake share directory
+install(
+    DIRECTORY config/                      # Source folder
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME}/config  
+)
+
+
 include(CMakePackageConfigHelpers)
 # generate the config file that is includes the exports
 configure_package_config_file(cmake/Config.cmake.in
