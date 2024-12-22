@@ -46,15 +46,13 @@ int main(int argc, char *argv[])
   cv::imwrite("crop_face2.png", cropped_faces2[0].croped_object);
   std::unordered_map<std::string, std::vector<float>> feature_vectors1,
       feature_vectors2;
-  cv::cuda::GpuMat gpu_input1(cropped_faces1[0].croped_object);
-  bool ret = face_rec.doInference(gpu_input1, feature_vectors1);
+  bool ret = face_rec.doInference(cropped_faces1[0].croped_object, feature_vectors1);
   cv::Mat out1 = cv::Mat(feature_vectors1.begin()->second.size(), 1, CV_32F,
                          feature_vectors1.begin()->second.data());
   cv::Mat out_norm1;
   cv::normalize(out1, out_norm1);
 
-  cv::cuda::GpuMat gpu_input2(cropped_faces2[0].croped_object);
-  ret = face_rec.doInference(gpu_input2, feature_vectors2);
+  ret = face_rec.doInference(cropped_faces2[0].croped_object, feature_vectors2);
 
   cv::Mat out2 = cv::Mat(feature_vectors1.begin()->second.size(), 1, CV_32F,
                          feature_vectors2.begin()->second.data());

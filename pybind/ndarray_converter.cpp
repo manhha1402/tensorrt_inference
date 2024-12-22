@@ -11,7 +11,8 @@
 #define PyInt_AsLong PyLong_AsLong
 #endif
 
-struct Tmp {
+struct Tmp
+{
   const char *name;
 
   Tmp(const char *name) : name(name) {}
@@ -19,7 +20,8 @@ struct Tmp {
 
 Tmp info("return value");
 
-bool NDArrayConverter::init_numpy() {
+bool NDArrayConverter::init_numpy()
+{
   // this has to be in this file, since PyArray_API is defined as static
   import_array1(false);
   return true;
@@ -30,7 +32,8 @@ bool NDArrayConverter::init_numpy() {
 
 static PyObject *opencv_error = 0;
 
-static int failmsg(const char *fmt, ...) {
+static int failmsg(const char *fmt, ...)
+{
   char str[1000];
 
   va_list ap;
@@ -42,7 +45,8 @@ static int failmsg(const char *fmt, ...) {
   return 0;
 }
 
-class PyAllowThreads {
+class PyAllowThreads
+{
 public:
   PyAllowThreads() : _state(PyEval_SaveThread()) {}
   ~PyAllowThreads() { PyEval_RestoreThread(_state); }
@@ -51,7 +55,8 @@ private:
   PyThreadState *_state;
 };
 
-class PyEnsureGIL {
+class PyEnsureGIL
+{
 public:
   PyEnsureGIL() : _state(PyGILState_Ensure()) {}
   ~PyEnsureGIL() { PyGILState_Release(_state); }
@@ -60,24 +65,29 @@ private:
   PyGILState_STATE _state;
 };
 
-#define ERRWRAP2(expr)                                                         \
-  try {                                                                        \
-    PyAllowThreads allowThreads;                                               \
-    expr;                                                                      \
-  } catch (const cv::Exception &e) {                                           \
-    PyErr_SetString(opencv_error, e.what());                                   \
-    return 0;                                                                  \
+#define ERRWRAP2(expr)                       \
+  try                                        \
+  {                                          \
+    PyAllowThreads allowThreads;             \
+    expr;                                    \
+  }                                          \
+  catch (const cv::Exception &e)             \
+  {                                          \
+    PyErr_SetString(opencv_error, e.what()); \
+    return 0;                                \
   }
 
 using namespace cv;
 
-class NumpyAllocator : public MatAllocator {
+class NumpyAllocator : public MatAllocator
+{
 public:
   NumpyAllocator() { stdAllocator = Mat::getStdAllocator(); }
   ~NumpyAllocator() {}
 
   UMatData *allocate(PyObject *o, int dims, const int *sizes, int type,
-                     size_t *step) const {
+                     size_t *step) const
+  {
     UMatData *u = new UMatData(this);
     u->data = u->origdata = (uchar *)PyArray_DATA((PyArrayObject *)o);
     npy_intp *_strides = PyArray_STRIDES((PyArrayObject *)o);
@@ -98,7 +108,8 @@ public:
                      UMatUsageFlags usageFlags) const
 #endif
   {
-    if (data != 0) {
+    if (data != 0)
+    {
       CV_Error(Error::StsAssert, "The data should normally be NULL!");
       // probably this is safe to do in such extreme case
       return stdAllocator->allocate(dims0, sizes, type, data, step, flags,
@@ -123,9 +134,9 @@ public:
       _sizes[i] = sizes[i];
     if (cn > 1)
       _sizes[dims++] = cn;
-#if CV_MAJOR_VERSION >= 4 ||                                                   \
-    (CV_MAJOR_VERSION == 3 && CV_VERSION_MINOR >= 5) ||                        \
-    (CV_MAJOR_VERSION == 3 && CV_VERSION_MINOR == 4 &&                         \
+#if CV_MAJOR_VERSION >= 4 ||                            \
+    (CV_MAJOR_VERSION == 3 && CV_VERSION_MINOR >= 5) || \
+    (CV_MAJOR_VERSION == 3 && CV_VERSION_MINOR == 4 &&  \
      CV_VERSION_REVISION >= 3)
     // Use cv::AutoBuffer::data() in OpenCV 3.4.3 and above
     PyObject *o = PyArray_SimpleNew(dims, _sizes.data(), typenum);
@@ -150,13 +161,15 @@ public:
     return stdAllocator->allocate(u, accessFlags, usageFlags);
   }
 
-  void deallocate(UMatData *u) const {
+  void deallocate(UMatData *u) const
+  {
     if (!u)
       return;
     PyEnsureGIL gil;
     CV_Assert(u->urefcount >= 0);
     CV_Assert(u->refcount >= 0);
-    if (u->refcount == 0) {
+    if (u->refcount == 0)
+    {
       PyObject *o = (PyObject *)u->userdata;
       Py_XDECREF(o);
       delete u;
@@ -168,34 +181,41 @@ public:
 
 NumpyAllocator g_numpyAllocator;
 
-bool NDArrayConverter::toMat(PyObject *o, Mat &m) {
+bool NDArrayConverter::toMat(PyObject *o, Mat &m)
+{
   bool allowND = true;
-  if (!o || o == Py_None) {
+  if (!o || o == Py_None)
+  {
     if (!m.data)
       m.allocator = &g_numpyAllocator;
     return true;
   }
 
-  if (PyInt_Check(o)) {
+  if (PyInt_Check(o))
+  {
     double v[] = {static_cast<double>(PyInt_AsLong((PyObject *)o)), 0., 0., 0.};
     m = Mat(4, 1, CV_64F, v).clone();
     return true;
   }
-  if (PyFloat_Check(o)) {
+  if (PyFloat_Check(o))
+  {
     double v[] = {PyFloat_AsDouble((PyObject *)o), 0., 0., 0.};
     m = Mat(4, 1, CV_64F, v).clone();
     return true;
   }
-  if (PyTuple_Check(o)) {
+  if (PyTuple_Check(o))
+  {
     int i, sz = (int)PyTuple_Size((PyObject *)o);
     m = Mat(sz, 1, CV_64F);
-    for (i = 0; i < sz; i++) {
+    for (i = 0; i < sz; i++)
+    {
       PyObject *oi = PyTuple_GetItem(o, i);
       if (PyInt_Check(oi))
         m.at<double>(i) = (double)PyInt_AsLong(oi);
       else if (PyFloat_Check(oi))
         m.at<double>(i) = (double)PyFloat_AsDouble(oi);
-      else {
+      else
+      {
         failmsg("%s is not a numerical tuple", info.name);
         m.release();
         return false;
@@ -204,7 +224,8 @@ bool NDArrayConverter::toMat(PyObject *o, Mat &m) {
     return true;
   }
 
-  if (!PyArray_Check(o)) {
+  if (!PyArray_Check(o))
+  {
     failmsg("%s is not a numpy array, neither a scalar", info.name);
     return false;
   }
@@ -223,12 +244,16 @@ bool NDArrayConverter::toMat(PyObject *o, Mat &m) {
              : typenum == NPY_DOUBLE ? CV_64F
                                      : -1;
 
-  if (type < 0) {
-    if (typenum == NPY_INT64 || typenum == NPY_UINT64 || typenum == NPY_LONG) {
+  if (type < 0)
+  {
+    if (typenum == NPY_INT64 || typenum == NPY_UINT64 || typenum == NPY_LONG)
+    {
       needcopy = needcast = true;
       new_typenum = NPY_INT;
       type = CV_32S;
-    } else {
+    }
+    else
+    {
       failmsg("%s data type = %d is not supported", info.name, typenum);
       return false;
     }
@@ -239,7 +264,8 @@ bool NDArrayConverter::toMat(PyObject *o, Mat &m) {
 #endif
 
   int ndims = PyArray_NDIM(oarr);
-  if (ndims >= CV_MAX_DIM) {
+  if (ndims >= CV_MAX_DIM)
+  {
     failmsg("%s dimensionality (=%d) is too high", info.name, ndims);
     return false;
   }
@@ -251,7 +277,8 @@ bool NDArrayConverter::toMat(PyObject *o, Mat &m) {
   const npy_intp *_strides = PyArray_STRIDES(oarr);
   bool ismultichannel = ndims == 3 && _sizes[2] <= CV_CN_MAX;
 
-  for (int i = ndims - 1; i >= 0 && !needcopy; i--) {
+  for (int i = ndims - 1; i >= 0 && !needcopy; i--)
+  {
     // these checks handle cases of
     //  a) multi-dimensional (ndims > 2) arrays, as well as simpler 1- and
     //  2-dimensional cases b) transposed arrays, where _strides[] elements go
@@ -267,7 +294,8 @@ bool NDArrayConverter::toMat(PyObject *o, Mat &m) {
   if (ismultichannel && _strides[1] != (npy_intp)elemsize * _sizes[2])
     needcopy = true;
 
-  if (needcopy) {
+  if (needcopy)
+  {
     // if (info.outputarg)
     // {
     //     failmsg("Layout of the output array %s is incompatible with cv::Mat
@@ -275,10 +303,13 @@ bool NDArrayConverter::toMat(PyObject *o, Mat &m) {
     //     info.name); return false;
     // }
 
-    if (needcast) {
+    if (needcast)
+    {
       o = PyArray_Cast(oarr, new_typenum);
       oarr = (PyArrayObject *)o;
-    } else {
+    }
+    else
+    {
       oarr = PyArray_GETCONTIGUOUS(oarr);
       o = (PyObject *)oarr;
     }
@@ -288,30 +319,37 @@ bool NDArrayConverter::toMat(PyObject *o, Mat &m) {
 
   // Normalize strides in case NPY_RELAXED_STRIDES is set
   size_t default_step = elemsize;
-  for (int i = ndims - 1; i >= 0; --i) {
+  for (int i = ndims - 1; i >= 0; --i)
+  {
     size[i] = (int)_sizes[i];
-    if (size[i] > 1) {
+    if (size[i] > 1)
+    {
       step[i] = (size_t)_strides[i];
       default_step = step[i] * size[i];
-    } else {
+    }
+    else
+    {
       step[i] = default_step;
       default_step *= size[i];
     }
   }
 
   // handle degenerate case
-  if (ndims == 0) {
+  if (ndims == 0)
+  {
     size[ndims] = 1;
     step[ndims] = elemsize;
     ndims++;
   }
 
-  if (ismultichannel) {
+  if (ismultichannel)
+  {
     ndims--;
     type |= CV_MAKETYPE(0, size[2]);
   }
 
-  if (ndims > 2 && !allowND) {
+  if (ndims > 2 && !allowND)
+  {
     failmsg("%s has more than 2 dimensions", info.name);
     return false;
   }
@@ -320,7 +358,8 @@ bool NDArrayConverter::toMat(PyObject *o, Mat &m) {
   m.u = g_numpyAllocator.allocate(o, ndims, size, type, step);
   m.addref();
 
-  if (!needcopy) {
+  if (!needcopy)
+  {
     Py_INCREF(o);
   }
   m.allocator = &g_numpyAllocator;
@@ -328,11 +367,13 @@ bool NDArrayConverter::toMat(PyObject *o, Mat &m) {
   return true;
 }
 
-PyObject *NDArrayConverter::toNDArray(const cv::Mat &m) {
+PyObject *NDArrayConverter::toNDArray(const cv::Mat &m)
+{
   if (!m.data)
     Py_RETURN_NONE;
   Mat temp, *p = (Mat *)&m;
-  if (!p->u || p->allocator != &g_numpyAllocator) {
+  if (!p->u || p->allocator != &g_numpyAllocator)
+  {
     temp.allocator = &g_numpyAllocator;
     ERRWRAP2(m.copyTo(temp));
     p = &temp;

@@ -16,38 +16,17 @@ namespace tensorrt_inference
     const auto &input_info = m_trtEngine->getInputInfo().begin();
 
     std::vector<float> conf, bbox, lmks;
-    for (auto it = feature_vectors.begin(); it != feature_vectors.end(); ++it)
+    for (const auto &it : feature_vectors)
     {
-      std::cout<<it->first<<std::endl;
-      if(it->first=="face_rpn_cls_prob_reshape_stride16")
-       {
-          for (const auto &val : it->second)
-        {
-          std::cout << val << std::endl;
-        }
-       }
-      // const auto &output_info = m_trtEngine->getOutputInfo().at(it->first);
-
-      // int rows = output_info.dims.d[2];
-      // int dimensions = output_info.dims.d[1];
-
-      // cv::Mat outputs(dimensions, rows, CV_32F, it->second.data());
-      // outputs = outputs.reshape(1, dimensions);
-      // cv::transpose(outputs, outputs);
-      // std::vector<float> output_data(outputs.rows * outputs.cols);
-      // std::memcpy(output_data.data(), outputs.ptr<float>(), output_data.size() * sizeof(float));
-      // if (output_data.size() == 33600) //
-      // {
-      //   for (const auto &val : it->second)
-      //   {
-      //     std::cout << val << std::endl;
-      //   }
-      //   conf = output_data;
-      // }
-      // else if (output_data.size() == 67200)
-      // {
-      //   bbox = output_data;
-      // }
+      const auto &output_info = m_trtEngine->getOutputInfo().at(it.first);
+      if (it.second.size() == 33600) //
+      {
+        conf = it.second;
+      }
+      else if (it.second.size() == 67200)
+      {
+        bbox = it.second;
+      }
       // else if(it.second.size() == 168000)
       // {
       //     lmks = it.second;
@@ -63,7 +42,6 @@ namespace tensorrt_inference
                              input_info->second.dims.d[2]);
     for (size_t i = 0; i < anchor.size(); ++i)
     {
-
       if (conf[i * 2 + 1] > params.obj_threshold)
       {
 
@@ -100,7 +78,6 @@ namespace tensorrt_inference
             rect.x + rect.width <= input_frame_w_ && 0 <= rect.y &&
             0 <= rect.height && rect.y + rect.height <= input_frame_h_)
         {
-
           bboxes.push_back(rect);
           scores.push_back(conf[i * 2 + 1]);
           // face_lmks.push_back(kps);

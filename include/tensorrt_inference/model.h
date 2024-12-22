@@ -42,9 +42,9 @@ namespace tensorrt_inference
 
         std::string onnx_file_;
         std::vector<float> factors_;
-
-        std::vector<float> sub_vals_{0, 0, 0};
-        std::vector<float> div_vals_{1.0f, 1.0f, 1.0f};
+        
+        cv::Scalar sub_vals_{0, 0, 0};
+        cv::Scalar div_vals_{1.0f, 1.0f, 1.0f};
         bool normalized_ = false;
         bool swapBR_ = true;
         int num_kps_ = 17;

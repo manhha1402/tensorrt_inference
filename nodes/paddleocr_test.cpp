@@ -55,7 +55,6 @@ int main(int argc, char *argv[])
   options_det.engine_file_dir = (model_dir / model_name).string();
   auto paddle_ocr = std::make_shared<tensorrt_inference::PaddleOCR>(
       model_name, options_det, options_rec, model_dir);
-  std::vector<cv::cuda::GpuMat> img_list;
   for (size_t i = 0; i < plates.size(); i++)
   {
     auto result = paddle_ocr->runInference(img, plates[i]);
