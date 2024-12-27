@@ -1,17 +1,4 @@
-onnx_file: "plate_yolov8n_320_2024.onnx"
-labels_file: "plate_yolov8n_320_2024.yaml"
-input_names: "input0"
-output_names: ["output0"]
 sub_vals: [0, 0, 0]
 div_vals: [1.0,1.0, 1.0]
-normalized: True
-swapBR: True
-image_order:   "BCHW"
-channel_order: "BGR"
-obj_threshold: 0.4
-nms_threshold: 0.45
-seg_threshold: 0.5
-agnostic:      False
-num_detect: 20
-alpha:   255.0
-resize: "keep_ratio"
+keep_ratio:  "true"
+normalized: "true"

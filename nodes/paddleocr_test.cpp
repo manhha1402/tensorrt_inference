@@ -3,7 +3,6 @@
 #include <opencv2/cudaimgproc.hpp>
 
 #include "tensorrt_inference/tensorrt_inference.h"
-
 // Runs object detection on video stream then displays annotated results.
 int main(int argc, char *argv[])
 {
@@ -19,7 +18,9 @@ int main(int argc, char *argv[])
   std::shared_ptr<tensorrt_inference::Detection> detection;
   detection =
       std::make_shared<tensorrt_inference::YoloV8>("plate_yolov8n_320_2024");
-
+  std::string home_dir = std::getenv("HOME");
+  std::string lable_file = home_dir + "/data/weights/plate_yolov8n_320_2024/plate_yolov8n_320_2024.yaml";
+  detection->readClassLabel(lable_file);
   // Run inference
   tensorrt_inference::DetectionParams params(0.3, 0.5, 0.5, 0.5, 1);
   std::vector<std::string> detected_classes{"all"};

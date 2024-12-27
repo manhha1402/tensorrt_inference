@@ -1,11 +1,11 @@
-#include "tensorrt_inference/yolov8.h"
+#include "tensorrt_inference/yolo11.h"
 namespace tensorrt_inference
 {
-  YoloV8::YoloV8(const std::string &model_name,
+  Yolo11::Yolo11(const std::string &model_name,
                  tensorrt_inference::Options options,
                  const std::filesystem::path &model_dir)
       : Detection(model_name, options, model_dir) {}
-  std::vector<Object> YoloV8::postprocess(
+  std::vector<Object> Yolo11::postprocess(
       std::unordered_map<std::string, std::vector<float>> &feature_vectors,
       const DetectionParams &params,
       const std::vector<std::string> &detected_class)
@@ -33,7 +33,7 @@ namespace tensorrt_inference
   }
 
   // Postprocess the output
-  std::vector<Object> YoloV8::postprocessDetect(
+  std::vector<Object> Yolo11::postprocessDetect(
       std::unordered_map<std::string, std::vector<float>> &feature_vectors,
       const DetectionParams &params,
       const std::vector<std::string> &detected_class)
@@ -126,7 +126,7 @@ namespace tensorrt_inference
   }
 
   // Postprocess the output for segmentation model
-  std::vector<Object> YoloV8::postProcessSegmentation(
+  std::vector<Object> Yolo11::postProcessSegmentation(
       std::unordered_map<std::string, std::vector<float>> &feature_vectors,
       const DetectionParams &params,
       const std::vector<std::string> &detected_class)
@@ -274,7 +274,7 @@ namespace tensorrt_inference
     return objects;
   }
 
-  std::vector<Object> YoloV8::postprocessPose(
+  std::vector<Object> Yolo11::postprocessPose(
       std::unordered_map<std::string, std::vector<float>> &feature_vectors,
       const DetectionParams &params,
       const std::vector<std::string> &detected_class)

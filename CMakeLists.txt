@@ -16,6 +16,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 option(BUILD_PYTHON_BINDING "Build Python binding" ON)
 
 
+
 #OpenMP
 find_package(OpenMP)
 if (OPENMP_FOUND)
@@ -42,10 +43,10 @@ add_library(${PROJECT_NAME}_lib SHARED
                 src/tensorrt_api/engine.cpp
                 src/model.cpp
                 src/utils.cpp
-                
                 src/detection.cpp
                 src/yolov8.cpp
                 src/yolov9.cpp
+                src/yolo11.cpp
                 src/retinaface.cpp
                 src/face_recognition.cpp
                 src/paddle_ocr/clipper.cpp
@@ -108,20 +109,13 @@ install(
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
 )
 
-# install(
-#   TARGETS face_rec_test detection_test paddleocr_test detectron2_test
-#   DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
-# )
-
 install(
-    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  TARGETS face_rec_test detection_test paddleocr_test detectron2_test
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
 )
-
-# Install data files to the CMake share directory
 install(
-    DIRECTORY config/                      # Source folder
-    DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME}/config  
+    DIRECTORY include/ config/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
 

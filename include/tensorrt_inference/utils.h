@@ -10,17 +10,6 @@
 namespace tensorrt_inference
 {
 
-  inline std::map<int, std::string> readClassLabel(const std::string &fileName)
-  {
-    YAML::Node config = YAML::LoadFile(fileName);
-
-    std::map<int, std::string> class_label;
-    for (size_t i = 0; i < config.size(); ++i)
-    {
-      class_label[i] = config[i].as<std::string>();
-    }
-    return class_label;
-  }
   inline std::vector<CroppedObject> getCroppedObjects(
       const cv::Mat &frame,
       const std::vector<tensorrt_inference::Object> &objects, const int w,

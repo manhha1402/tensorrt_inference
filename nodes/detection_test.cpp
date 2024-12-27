@@ -23,6 +23,10 @@ int main(int argc, char *argv[])
   {
     detection = std::make_shared<tensorrt_inference::YoloV9>(model_name);
   }
+  else if (model_name.find("yolo11") != std::string::npos)
+  {
+    detection = std::make_shared<tensorrt_inference::Yolo11>(model_name);
+  }
   else if (model_name.find("facedetector") != std::string::npos)
   {
     detection = std::make_shared<tensorrt_inference::RetinaFace>(model_name);
@@ -30,9 +34,13 @@ int main(int argc, char *argv[])
   else if (model_name.find("retinaface") != std::string::npos)
   {
     detection = std::make_shared<tensorrt_inference::RetinaFace>(model_name);
-  } else if (model_name.find("plate_detection") != std::string::npos) {
+  }
+  else if (model_name.find("plate_detection") != std::string::npos)
+  {
     detection = std::make_shared<tensorrt_inference::YoloV8>(model_name);
-  } else {
+  }
+  else
+  {
     std::cout << "unkown model" << std::endl;
     return 1;
   }
@@ -58,7 +66,7 @@ int main(int argc, char *argv[])
   // Save the image to disk
   const auto outputName =
       inputImage.substr(0, inputImage.find_last_of('.')) + "_annotated.jpg";
-  
+
   cv::imshow("result", result);
   cv::waitKey(0);
   cv::imwrite(outputName, result);

@@ -28,27 +28,21 @@ namespace tensorrt_inference
         //     std::unordered_map<std::string, std::vector<int32_t>> &feature_int_vectors);
         std::unique_ptr<Engine> m_trtEngine = nullptr;
 
-    protected:
-        // Preprocess the input. Normalize values between [0.f, 1.f] Setting the
-        // normalize flag to false will leave values between [0.f, 255.f] (some
-        // converted models may require this). If the model requires values to be
-        // normalized between [-1.f, 1.f], use the following params:
-        //    subVals = {0.0f, 0.0f, 0.0f};
-        //    divVals = {1.f, 1.f, 1.f};
-        //    normalize = false;
-        // cv::cuda::GpuMat preprocess(const cv::cuda::GpuMat &gpuImg);
+        void setParams(const PreprocessParams &params);
 
+    protected:
+        /**
+         * Preprocess image beforing doing the inference
+         */
         bool preProcess(const cv::Mat &img);
 
+        void setDefaultParams(const std::string &model_name);
         std::string onnx_file_;
         std::vector<float> factors_;
-        
-        cv::Scalar sub_vals_{0, 0, 0};
-        cv::Scalar div_vals_{1.0f, 1.0f, 1.0f};
-        bool normalized_ = false;
-        bool swapBR_ = true;
+
+        PreprocessParams preprocess_params_;
+
         int num_kps_ = 17;
-        bool keep_ratio_ = true;
         std::vector<float> ratios_{1, 1};
         float input_frame_w_, input_frame_h_;
     };

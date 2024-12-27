@@ -1,9 +1,0 @@
-onnx_file: "facedetector.onnx"
-labels_file: "facedetector.yaml"
-sub_vals: [104, 117, 123]
-div_vals: [1.0,1.0, 1.0]
-normalized: "false"
-obj_threshold: 0.6
-nms_threshold: 0.6
-num_detect: 20
-keep_ratio: "true"

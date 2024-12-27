@@ -2,10 +2,12 @@
 #include "tensorrt_inference/detection.h"
 namespace tensorrt_inference
 {
-    class YoloV9 : public Detection
+    class Yolo11 : public Detection
     {
     public:
-        YoloV9(const std::string &model_name,
+        // Builds the onnx model into a TensorRT engine, and loads the engine into
+        // memory
+        Yolo11(const std::string &model_name,
                tensorrt_inference::Options options = tensorrt_inference::Options(),
                const std::filesystem::path &model_dir =
                    std::filesystem::path(std::getenv("HOME")) / "data" / "weights");
@@ -19,6 +21,12 @@ namespace tensorrt_inference
 
         // Postprocess the output
         std::vector<Object> postprocessDetect(
+            std::unordered_map<std::string, std::vector<float>> &feature_vectors,
+            const DetectionParams &params = DetectionParams(),
+            const std::vector<std::string> &detected_class = {});
+
+        // Postprocess the output for pose model
+        std::vector<Object> postprocessPose(
             std::unordered_map<std::string, std::vector<float>> &feature_vectors,
             const DetectionParams &params = DetectionParams(),
             const std::vector<std::string> &detected_class = {});

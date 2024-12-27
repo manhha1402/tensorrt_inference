@@ -36,6 +36,11 @@ namespace tensorrt_inference
         detector_ = std::make_unique<tensorrt_inference::YoloV9>(
             model_name, options, model_path);
       }
+      else if (model_name.find("yolo11") != std::string::npos)
+      {
+        detector_ = std::make_unique<tensorrt_inference::Yolo11>(
+            model_name, options, model_path);
+      }
       else if (model_name.find("facedetector") != std::string::npos)
       {
         detector_ = std::make_unique<tensorrt_inference::RetinaFace>(

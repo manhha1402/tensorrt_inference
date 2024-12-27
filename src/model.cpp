@@ -6,39 +6,13 @@ namespace tensorrt_inference
   Model::Model(const std::string &model_name, tensorrt_inference::Options options,
                const std::filesystem::path &model_dir)
   {
-    std::string config_file = (model_dir / model_name / "config.yaml").string();
-    YAML::Node config = YAML::LoadFile(config_file);
+    onnx_file_ = (model_dir / model_name / (model_name + ".onnx")).string();
+    if (!std::filesystem::exists(onnx_file_))
+    {
+      throw std::runtime_error("onnx file not existed");
+    }
+    setDefaultParams(model_name);
 
-    onnx_file_ =
-        (model_dir / model_name / config["onnx_file"].as<std::string>()).string();
-    if (config["num_kps"])
-    {
-      num_kps_ = config["num_kps"].as<int>();
-    }
-    if (config["normalized"])
-    {
-      normalized_ = config["normalized"].as<bool>();
-    }
-    if (config["swapBR"])
-    {
-      swapBR_ = config["swapBR"].as<bool>();
-    }
-    if (config["sub_vals"])
-    {
-      sub_vals_ = cv::Scalar(config["sub_vals"].as<std::vector<float>>()[0],
-                             config["sub_vals"].as<std::vector<float>>()[1],
-                             config["sub_vals"].as<std::vector<float>>()[2]);
-    }
-    if (config["div_vals"])
-    {
-      div_vals_ = cv::Scalar(config["div_vals"].as<std::vector<float>>()[0],
-                             config["div_vals"].as<std::vector<float>>()[1],
-                             config["div_vals"].as<std::vector<float>>()[2]);
-    }
-    if (config["keep_ratio"])
-    {
-      keep_ratio_ = config["keep_ratio"].as<bool>();
-    }
     // Specify options for GPU inference
     options.engine_file_dir = getFolderOfFile(onnx_file_);
     m_trtEngine = std::make_unique<Engine>(options);
@@ -54,17 +28,45 @@ namespace tensorrt_inference
   }
   Model::~Model() {}
 
+  void Model::setDefaultParams(const std::string &model_name)
+  {
+    if (model_name.find("facedetector") != std::string::npos || model_name.find("retinaface") != std::string::npos)
+    {
+      preprocess_params_ = PreprocessParams(cv::Scalar(104, 117, 123), cv::Scalar(1.0, 1.0, 1.0), false, true, true);
+    }
+    else if (model_name.find("yolo") != std::string::npos)
+    {
+      preprocess_params_ = PreprocessParams(cv::Scalar(0, 0, 0), cv::Scalar(1.0, 1.0, 1.0), true, true, true);
+    }
+    else
+    {
+      preprocess_params_ = PreprocessParams();
+    }
+    preprocess_params_.printInfo();
+  }
+  void Model::setParams(const PreprocessParams &params)
+  {
+    preprocess_params_ = params;
+    preprocess_params_.printInfo();
+  }
   bool Model::preProcess(const cv::Mat &img)
   {
     cv::Mat mat;
-    cv::cvtColor(img, mat, cv::COLOR_BGR2RGB);
+    if (preprocess_params_.swapBR)
+    {
+      cv::cvtColor(img, mat, cv::COLOR_BGR2RGB);
+    }
+    else
+    {
+      mat = img.clone();
+    }
 
     const auto &input_info = m_trtEngine->getInputInfo().begin();
     input_frame_w_ = float(img.cols);
     input_frame_h_ = float(img.rows);
     std::vector<float> input_buff(input_info->second.tensor_length);
     cv::Mat resized_img;
-    if (keep_ratio_)
+    if (preprocess_params_.keep_ratio)
     {
       ratios_[0] = ratios_[1] = std::max(float(img.cols) / float(input_info->second.dims.d[3]), float(img.rows) / float(input_info->second.dims.d[3]));
       float resize_ratio = std::min(float(input_info->second.dims.d[3]) / float(img.cols), float(input_info->second.dims.d[2]) / float(img.rows));
@@ -79,19 +81,19 @@ namespace tensorrt_inference
       ratios_[1] = float(img.rows) / float(input_info->second.dims.d[2]);
       cv::resize(mat, resized_img, cv::Size(input_info->second.dims.d[3], input_info->second.dims.d[2]));
     }
-    if (normalized_)
+    if (preprocess_params_.normalized)
     {
       resized_img.convertTo(resized_img, CV_32FC3, 1.0 / 255.0);
-      sub_vals_ = sub_vals_ / 255.0;
+      preprocess_params_.sub_vals = preprocess_params_.sub_vals / 255.0;
     }
     else
     {
       resized_img.convertTo(resized_img, CV_32FC3);
     }
     // pepform substraction
-    cv::subtract(resized_img, sub_vals_, resized_img, cv::noArray(), -1);
+    cv::subtract(resized_img, preprocess_params_.sub_vals, resized_img, cv::noArray(), -1);
     // perfrom divide
-    cv::divide(resized_img, div_vals_, resized_img);
+    cv::divide(resized_img, preprocess_params_.div_vals, resized_img);
 
     for (int i = 0; i < resized_img.channels(); ++i)
     {
@@ -112,9 +114,10 @@ namespace tensorrt_inference
       std::unordered_map<std::string, std::vector<float>> &feature_vectors)
   {
     bool res = preProcess(img);
-
-    std::cout << "runInference" << std::endl;
+    std::cout << "preprocess done" << std::endl;
     auto succ = m_trtEngine->runInference(feature_vectors);
+    std::cout << "runInference done" << std::endl;
+
     if (!succ)
     {
       spdlog::error("Error: Unable to run inference.");
@@ -122,4 +125,5 @@ namespace tensorrt_inference
     }
     return true;
   }
+
 } // namespace tensorrt_inference

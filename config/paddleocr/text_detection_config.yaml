@@ -1,7 +1,4 @@
-onnx_file:    "text_detection.onnx"
-labels_file: "text_detection.yaml"
-input_names: "x"
-output_names: ["output0"]
+
 sub_vals: [0, 0, 0]
 div_vals: [1.0,1.0, 1.0]
 normalized: True

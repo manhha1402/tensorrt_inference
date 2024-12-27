@@ -1,6 +1,7 @@
 
 
 #include "tensorrt_inference/detection.h"
+#include "tensorrt_inference/label_const.h"
 namespace tensorrt_inference
 {
   Detection::Detection(const std::string &model_name,
@@ -8,35 +9,28 @@ namespace tensorrt_inference
                        const std::filesystem::path &model_dir)
       : Model(model_name, options, model_dir)
   {
-    std::string config_file = (model_dir / model_name / "config.yaml").string();
-    YAML::Node config = YAML::LoadFile(config_file);
 
-    if (config["labels_file"])
+    class_labels_ = class_labels;
+    CATEGORY = class_labels_.size();
+    class_colors_.resize(CATEGORY);
+    srand((int)time(nullptr));
+    for (cv::Scalar &class_color : class_colors_)
+      class_color = cv::Scalar(rand() % 255, rand() % 255, rand() % 255);
+  }
+
+  void Detection::readClassLabel(const std::string &label_file)
+  {
+    class_labels_.clear();
+    YAML::Node config = YAML::LoadFile(label_file);
+    for (size_t i = 0; i < config.size(); ++i)
     {
-      std::string labels_file =
-          (model_dir / model_name / config["labels_file"].as<std::string>())
-              .string();
-      if (Util::doesFileExist(std::filesystem::path(labels_file)))
-      {
-        class_labels_ = readClassLabel(labels_file);
-      }
-      else
-      {
-        spdlog::error("label file is not existed!");
-      }
+      class_labels_[i] = config[i].as<std::string>();
     }
     CATEGORY = class_labels_.size();
     class_colors_.resize(CATEGORY);
     srand((int)time(nullptr));
     for (cv::Scalar &class_color : class_colors_)
       class_color = cv::Scalar(rand() % 255, rand() % 255, rand() % 255);
-    std::cout << "sub_vals: " << sub_vals_[0] << " " << sub_vals_[1] << " "
-              << sub_vals_[2] << std::endl;
-    std::cout << "div_vals: " << div_vals_[0] << " " << div_vals_[1] << " "
-              << div_vals_[2] << std::endl;
-    std::cout << "normalized: " << normalized_ << std::endl;
-    std::cout << "swapBR: " << swapBR_ << std::endl;
-    std::cout << "num_kps: " << num_kps_ << std::endl;
   }
 
   std::vector<Object> Detection::detect(

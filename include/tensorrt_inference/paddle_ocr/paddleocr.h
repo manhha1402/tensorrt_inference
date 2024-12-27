@@ -8,76 +8,82 @@
 #include "tensorrt_inference/paddle_ocr/paddleocr_utils.h"
 #include "tensorrt_inference/tensorrt_api/engine.h"
 #include "tensorrt_inference/utils.h"
-namespace tensorrt_inference {
 
-class TextDetection : public Engine {
- public:
-  explicit TextDetection(
-      const std::string &model_name,
-      tensorrt_inference::Options options = tensorrt_inference::Options(),
-      const std::filesystem::path &model_dir =
-          std::filesystem::path(std::getenv("HOME")) / "data" / "weights");
-  uint32_t getMaxOutputLength(const nvinfer1::Dims &tensorShape) const override;
+namespace tensorrt_inference
+{
 
-  void runInference(const cv::cuda::GpuMat &gpu_img,
-                    std::vector<std::vector<std::vector<int>>> &boxes);
+  class TextDetection : public Engine
+  {
+  public:
+    explicit TextDetection(
+        const std::string &model_name,
+        tensorrt_inference::Options options = tensorrt_inference::Options(),
+        const std::filesystem::path &model_dir =
+            std::filesystem::path(std::getenv("HOME")) / "data" / "weights");
+    uint32_t getMaxOutputLength(const nvinfer1::Dims &tensorShape) const override;
 
- private:
-  std::string onnx_file_;
-  int max_side_len_ = 960;
-  std::array<float, 3> mean_ = {0.485f, 0.456f, 0.406f};
-  std::array<float, 3> scale_ = {1 / 0.229f, 1 / 0.224f, 1 / 0.225f};
-  double det_db_thresh_ = 0.3;
-  double det_db_box_thresh_ = 0.5;
-  double det_db_unclip_ratio_ = 2.0;
-  bool use_polygon_score_ = false;
-};
+    void runInference(const cv::cuda::GpuMat &gpu_img,
+                      std::vector<std::vector<std::vector<int>>> &boxes);
 
-class TextRecognition : public Engine {
- public:
-  explicit TextRecognition(
-      const std::string &model_name,
-      tensorrt_inference::Options options = tensorrt_inference::Options(),
-      const std::filesystem::path &model_dir =
-          std::filesystem::path(std::getenv("HOME")) / "data" / "weights");
-  uint32_t getMaxOutputLength(const nvinfer1::Dims &tensorShape) const override;
+  private:
+    std::string onnx_file_;
+    int max_side_len_ = 960;
+    std::array<float, 3> mean_ = {0.485f, 0.456f, 0.406f};
+    std::array<float, 3> scale_ = {1 / 0.229f, 1 / 0.224f, 1 / 0.225f};
+    double det_db_thresh_ = 0.3;
+    double det_db_box_thresh_ = 0.5;
+    double det_db_unclip_ratio_ = 2.0;
+    bool use_polygon_score_ = false;
+  };
 
-  std::pair<std::string, double> runInference(
-      std::vector<cv::cuda::GpuMat> &img_list);
-  std::vector<std::string> label_list_;
+  class TextRecognition : public Engine
+  {
+  public:
+    explicit TextRecognition(
+        const std::string &model_name,
+        tensorrt_inference::Options options = tensorrt_inference::Options(),
+        const std::filesystem::path &model_dir =
+            std::filesystem::path(std::getenv("HOME")) / "data" / "weights");
+    uint32_t getMaxOutputLength(const nvinfer1::Dims &tensorShape) const override;
 
-  template <class ForwardIterator>
-  inline static size_t argmax(ForwardIterator first, ForwardIterator last) {
-    return std::distance(first, std::max_element(first, last));
-  }
+    std::pair<std::string, double> runInference(
+        std::vector<cv::cuda::GpuMat> &img_list);
+    std::vector<std::string> label_list_;
 
- protected:
-  std::string onnx_file_;
+    template <class ForwardIterator>
+    inline static size_t argmax(ForwardIterator first, ForwardIterator last)
+    {
+      return std::distance(first, std::max_element(first, last));
+    }
 
-  std::array<float, 3> mean_ = {0.5f, 0.5f, 0.5f};
-  std::array<float, 3> scale_ = {1 / 0.5f, 1 / 0.5f, 1 / 0.5f};
-  int rec_batch_num_ = 6;
-};
+  protected:
+    std::string onnx_file_;
 
-class PaddleOCR {
- public:
-  explicit PaddleOCR(
-      const std::string &model_name,
-      tensorrt_inference::Options options_det = tensorrt_inference::Options(),
-      tensorrt_inference::Options options_rec = tensorrt_inference::Options(),
-      const std::filesystem::path &model_dir =
-          std::filesystem::path(std::getenv("HOME")) / "data" / "weights");
+    std::array<float, 3> mean_ = {0.5f, 0.5f, 0.5f};
+    std::array<float, 3> scale_ = {1 / 0.5f, 1 / 0.5f, 1 / 0.5f};
+    int rec_batch_num_ = 6;
+  };
 
-  std::pair<std::string, double> runInference(
-      cv::Mat &img, const CroppedObject &cropped_plate);
+  class PaddleOCR
+  {
+  public:
+    explicit PaddleOCR(
+        const std::string &model_name,
+        tensorrt_inference::Options options_det = tensorrt_inference::Options(),
+        tensorrt_inference::Options options_rec = tensorrt_inference::Options(),
+        const std::filesystem::path &model_dir =
+            std::filesystem::path(std::getenv("HOME")) / "data" / "weights");
 
-  cv::Mat drawBBoxLabels(const cv::Mat &image,
-                         const std::vector<CroppedObject> &objects,
-                         unsigned int scale = 2);
+    std::pair<std::string, double> runInference(
+        cv::Mat &img, const CroppedObject &cropped_plate);
 
- private:
-  std::shared_ptr<TextDetection> text_det_;
-  std::shared_ptr<TextRecognition> text_rec_;
-};
+    cv::Mat drawBBoxLabels(const cv::Mat &image,
+                           const std::vector<CroppedObject> &objects,
+                           unsigned int scale = 2);
 
-}  // namespace tensorrt_inference
+  private:
+    std::shared_ptr<TextDetection> text_det_;
+    std::shared_ptr<TextRecognition> text_rec_;
+  };
+
+} // namespace tensorrt_inference
