@@ -48,7 +48,6 @@ namespace tensorrt_inference
             const std::vector<std::string> &detected_class = {}) = 0;
         std::map<int, std::string> class_labels_;
         int CATEGORY;
-        bool agnostic_;
         std::vector<cv::Scalar> class_colors_;
 
         const std::vector<std::vector<unsigned int>> KPS_COLORS = {
