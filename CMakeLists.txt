@@ -1,5 +1,21 @@
 cmake_minimum_required(VERSION 3.22)
+# Set default build type if not provided by user
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
+        "Choose the type of build, options are: None Debug Release RelWithDebInfo"
+        FORCE)
+endif(NOT CMAKE_BUILD_TYPE)
+
+
 message(STATUS "Configuring with CMake ${CMAKE_VERSION}")
+# By default we build for the native cuda architecture. Customize by passing
+# '-DCMAKE_CUDA_ARCHITECTURES=89;75;72' to cmake.
+if (DEFINED CMAKE_CUDA_ARCHITECTURES)
+  set(CMAKE_CUDA_ARCHITECTURES_SET_EXTERNALLY TRUE)
+else()
+  set(CMAKE_CUDA_ARCHITECTURES_SET_EXTERNALLY FALSE)
+endif()
+
 project(tensorrt_inference VERSION 0.0.1
                DESCRIPTION "TensorRT Inference"
                LANGUAGES C CXX CUDA)
@@ -15,6 +31,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Ofast -DNDEBUG -Wno-deprecated-de
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 option(BUILD_PYTHON_BINDING "Build Python binding" ON)
 
+include(cmake/cuda/setup_compute_capability.cmake)
 
 
 #OpenMP
@@ -29,8 +46,10 @@ endif()
 
 # We require CUDA, OpenCV, and TensorRT
 # Use the correct version of CUDA
-set(CUDA_TOOLKIT_ROOT_DIR /usr/local/cuda)
-find_package(CUDA REQUIRED)
+find_package(CUDAToolkit REQUIRED)
+# External includes
+include_directories(SYSTEM ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+
 find_package(TensorRT REQUIRED)
 find_package(OpenCV REQUIRED NO_MODULE PATHS /usr/local NO_DEFAULT_PATH)
 find_package(YAML-CPP REQUIRED)

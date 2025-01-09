@@ -1,18 +1,12 @@
 import cv2
 import tensorrt_inference_py
 from pathlib import Path
-from facenet_pytorch import MTCNN, InceptionResnetV1
-import torch
-from torch.utils.data import DataLoader
-from torchvision import datasets
 import numpy as np
-import pandas as pd
-import os
 
 # from deepface import DeepFace
 
-img_file1 = Path.home() / "data" / "test_images" / "david1.jpg"
-img_file2 = Path.home() / "data" / "test_images" / "david2.jpg"
+img_file1 = Path.home() / "data" / "face_recognition" / "David" /"david2.jpg"
+img_file2 = Path.home() / "data" / "face_recognition" / "David" /"david2.jpg"
 
 image1 =cv2.imread(img_file1.as_posix())
 image2 =cv2.imread(img_file2.as_posix())
@@ -40,33 +34,3 @@ D = embedding1.transpose() @ embedding2  # Or A @ B
 
 print(C)
 print(D)
-
-
-
-
-
-
-
-
-
-
-
-# import cv2
-
-# stream_url = "rtsp://admin:namtiep2005@192.168.1.125:554/Streaming/Channels/101"
-# cap = cv2.VideoCapture(stream_url)
-
-# while True:
-#     ret, frame = cap.read()
-#     print(frame.shape)
-#     if ret:
-#         cv2.imshow('Hikvision Stream', frame)
-#         if cv2.waitKey(1) & 0xFF == ord('q'):
-#             break
-#     else:
-#         break
-
-# cap.release()
-# cv2.destroyAllWindows()
-
-

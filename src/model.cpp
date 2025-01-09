@@ -114,10 +114,7 @@ namespace tensorrt_inference
       std::unordered_map<std::string, std::vector<float>> &feature_vectors)
   {
     bool res = preProcess(img);
-    std::cout << "preprocess done" << std::endl;
     auto succ = m_trtEngine->runInference(feature_vectors);
-    std::cout << "runInference done" << std::endl;
-
     if (!succ)
     {
       spdlog::error("Error: Unable to run inference.");
